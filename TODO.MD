@@ -27,12 +27,12 @@ Scope: Actionable security worklist derived from static code review.
 - Production installs are blocked unless `ALLOW_INSTALLER_IN_PRODUCTION=1` is explicitly set.
 
 **What still remains**
-- Add server/web config to deny direct public access to `Install.php` after first deployment (Apache/Nginx).
+- Add server/web config to deny direct public access to `Install.php` after first deployment (Apache/Nginx). ✅ Apache `.htaccess` deny added; Nginx snippet documented in README.
 
 **Definition of done**
 - Fresh setup requires valid setup token. ✅
 - Re-running installer cannot wipe existing DB. ✅
-- Web server denies installer route post-deployment. ⏳
+- Web server denies installer route post-deployment. ✅ (Apache via `.htaccess`)
 
 ---
 
