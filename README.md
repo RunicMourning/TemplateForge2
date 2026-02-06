@@ -1,146 +1,169 @@
 # TemplateForge2
 
-TemplateForge2 is a lightweight, file-first PHP CMS/blog engine built on SQLite with an admin panel, pluggable addons, and hook-based theme injection.
+> A lightweight, file-first PHP CMS + blog engine with a modern admin panel, SQLite storage, addon hooks, activity logging, and built-in analytics.
 
-## Project analysis
+---
 
-### What this project is
-- **Frontend CMS** with page routing by slug (`index.php`) and a fallback template system in `templates/`.
-- **Blog engine** with listing (`blog.php`) and single post rendering (`post.php`).
-- **Admin console** (`/admin`) for content, users, settings, analytics, logs, and navigation management.
-- **Installer** (`Install.php`) that creates the SQLite schema and seeds starter content.
-- **Addon system** (`addons/*.php`) using a central hook registry (`includes/hooks.php`) to inject UI, JS, and policy content.
+## ✨ Why TemplateForge2?
 
-### High-level architecture
-- **Entry points**
-  - `index.php`: page routing (`pageslug`) + template rendering.
-  - `blog.php`: post list with optional category/author filtering.
-  - `post.php`: single published post by `slug`.
-  - `admin/index.php`: auth gate + module router via `view` parameter.
-- **Core services**
-  - `functions.php`: logging, settings loading, analytics tracking, sidebar helpers, utility functions.
-  - `includes/hooks.php`: `add_hook()` / `run_hook()` plugin execution model.
-- **Presentation**
-  - `templates/`: header/footer/page/blog/post templates.
-  - `sidebars/`: reusable widgets included by `templates/header.php`.
-- **Persistence**
-  - SQLite database at `db/cms.db`.
-  - Created/seeded by `Install.php`.
+TemplateForge2 keeps deployment simple (single PHP app + SQLite) while still offering the controls you usually need in production:
 
-### Key features discovered
-- Prepared statements are used in most user-input query paths (pages/posts/users/login/contact insert).
-- Addons can extend both frontend and admin settings UI through hooks.
-- Analytics capture page view metadata and simple visitor fingerprinting (`sha256(ip+ua)`).
-- Contact form supports Cloudflare Turnstile configuration and message storage.
+- **Content pages + blog posts** with slug-based routing.
+- **Admin panel** for dashboard, pages, blog, settings, navigation, users, analytics, and logs.
+- **Hook engine** for pluggable addons (`add_hook()` / `run_hook()`).
+- **Activity logging** across auth and system events.
+- **Visitor analytics + traffic stats** (referrer groups, devices, trends, retention).
 
-## Quick start
+---
+
+## 🧱 Architecture at a glance
+
+### Request entry points
+- `index.php`: main page routing + template rendering.
+- `blog.php`: blog listing/filtering.
+- `post.php`: single post rendering.
+- `admin/index.php`: authentication gate + module router.
+
+### Core services
+- `functions.php`
+  - `log_activity(...)` for structured activity logs.
+  - `track_visit(...)` for traffic tracking and visitor fingerprinting.
+  - `get_site_settings(...)` shared settings loader.
+- `includes/hooks.php`
+  - `add_hook($name, $callback)` to register addon behavior.
+  - `run_hook($name)` to execute all callbacks for a location.
+
+### Storage
+- SQLite database at `db/cms.db`.
+- Installer bootstraps schema and seed content via `Install.php`.
+
+---
+
+## 📊 Logging, stats, and hooks (deep dive)
+
+### 1) Activity logging
+Logging is centralized in `log_activity(...)` and writes to the `logs` table with:
+
+- category
+- event
+- enriched details (`Details + Referrer + UA`)
+- user context
+- IP address
+- timestamp
+
+In admin, the **Logs** module supports:
+- category filtering
+- latest-first inspection (up to 500 rows)
+- one-click pruning of entries older than 7 days
+
+### 2) Analytics + stats
+`track_visit(...)` records:
+- `visitor_id` (SHA-256 fingerprint of IP + user agent)
+- page URL
+- referrer
+- browser / OS classification
+- device classification (mobile vs desktop)
+
+The **Analytics** module computes and visualizes:
+- page views today + day-over-day trend
+- unique visitors
+- bounce rate
+- returning visitor retention
+- browser/device distributions
+- traffic type split (human vs bot-like signatures)
+- referrer source groups (Direct / Search / Social / Referral)
+- top pages + hourly and weekly trends
+
+### 3) Hook system (addons)
+Hook registration is global and intentionally simple:
+
+- Addons call `add_hook('hook_name', $callback_or_html)`.
+- Templates/admin invoke `run_hook('hook_name')`.
+- Callback hooks and raw HTML injection are both supported.
+
+This makes feature extension straightforward without editing core templates for every customization.
+
+---
+
+## 🖼️ Visual preview
+
+> Note: live browser-container screenshot capture was attempted in this environment, but container routing returned a `Not Found` page. The previews below are illustrative assets added to make the README visual and informative.
+
+### Homepage
+![TemplateForge2 homepage preview](docs/screenshots/homepage-preview.svg)
+
+### Admin analytics
+![TemplateForge2 analytics preview](docs/screenshots/analytics-preview.svg)
+
+### Admin logs
+![TemplateForge2 logs preview](docs/screenshots/logs-preview.svg)
+
+---
+
+## 🚀 Quick start
 
 ### Requirements
 - PHP **8.0+**
 - `pdo_sqlite` extension
-- Writable directories for `db/` and `uploads/`
+- Writable directories: `db/`, `uploads/`
 
 ### Run locally
 ```bash
 php -S 0.0.0.0:8000
 ```
-Then open:
-- `http://localhost:8000/Install.php` for first-time setup
-- `http://localhost:8000/` for the site
-- `http://localhost:8000/admin/` for admin
 
-## Directory map
+Then open:
+- `http://localhost:8000/Install.php`
+- `http://localhost:8000/`
+- `http://localhost:8000/admin/`
+
+---
+
+## 🔐 Security testing (requested)
+
+Security-focused checks run during this update included:
+
+1. PHP syntax lint across the codebase.
+2. Dangerous-function scan (`eval`, `exec`, `shell_exec`, etc.).
+3. Debug exposure scan (`display_errors`, permissive `error_reporting`).
+4. SQL query pattern scan (`prepare()` coverage vs raw query usage).
+5. CSRF token usage scan for state-changing forms.
+
+### High-level findings
+
+**Strengths**
+- PDO prepared statements are widely used in auth/CRUD flows.
+- Password handling uses `password_hash()` and `password_verify()`.
+- Installer includes setup-token + CSRF checks.
+
+**Hardening opportunities**
+- Keep debug output disabled in production entry points.
+- Expand CSRF coverage to all mutating admin/contact actions.
+- Keep installer route blocked after setup (`admin/lock` + webserver deny rule).
+- Consider stricter allowlisting in admin module routing.
+
+---
+
+## 📁 Directory map
 
 ```text
 TemplateForge2/
-├── index.php              # main page router
-├── blog.php               # blog list route
-├── post.php               # blog post route
-├── Install.php            # installer + schema bootstrap
-├── functions.php          # shared helpers/services
+├── index.php
+├── blog.php
+├── post.php
+├── Install.php
+├── functions.php
 ├── includes/
-│   ├── hooks.php          # addon hook engine
-│   └── css-registry.php   # inline css queue utilities
-├── templates/             # frontend templates
-├── sidebars/              # widget snippets
-├── addons/                # plugin-style extensions
-└── admin/                 # admin panel + modules
+│   ├── hooks.php
+│   └── css-registry.php
+├── addons/
+├── templates/
+├── sidebars/
+└── admin/
 ```
 
-## Security testing (requested)
+---
 
-I ran static and syntax-level checks focused on common web-app risks.
+## 📜 License
 
-### Checks performed
-1. **Full PHP syntax lint** across all PHP files.
-2. **Dangerous function scan** (`eval`, `shell_exec`, `system`, `unserialize`, etc.).
-3. **Error/debug exposure scan** (`display_errors`, `error_reporting`).
-4. **Input surface scan** for direct `$_GET` / `$_POST` usage.
-5. **SQL usage scan** for `prepare()` vs raw `query()` patterns.
-6. **CSRF surface scan** for token usage.
-
-### Security findings summary
-
-#### Good
-- Core auth and most CRUD data operations use PDO prepared statements.
-- Passwords are hashed with `password_hash()` and checked with `password_verify()`.
-
-#### Risks to address
-1. **Debug exposure in production**
-   - `display_errors` and full `E_ALL` are enabled in public entry points.
-2. **Missing CSRF protections**
-   - Admin and contact form POST actions do not include CSRF tokens.
-3. **Installer hardening gap**
-   - Installer can still be reached after setup unless manually removed.
-   - Fallback default password (`admin123`) exists if empty input is posted.
-4. **Potential XSS vectors**
-   - CMS content fields are rendered as raw HTML in templates (intentional for rich content, but untrusted editor input would be dangerous).
-5. **Dynamic module include from query param**
-   - `admin/index.php` builds module paths from `view`; file existence check reduces risk, but an allowlist would be safer.
-
-### Recommended hardening
-- Disable `display_errors` in runtime entry points and log errors server-side.
-- Add CSRF tokens to all state-changing forms (admin + contact).
-- Require non-empty strong installer password; block installer once `db/cms.db` exists.
-- Add strict allowlist for admin module routing (`dashboard`, `pages`, `blog`, etc.).
-- Limit/admin-sanitize HTML-capable fields or use trusted-editor-only policy with role controls.
-- Add security headers (`Content-Security-Policy`, `X-Frame-Options`, `Referrer-Policy`, etc.).
-
-
-## Production hardening for installer route
-
-`Install.php` is runtime-locked by `admin/lock`, and Apache is now configured to return **403 Forbidden** for direct requests to `Install.php` once that lock file exists.
-
-### Apache (`.htaccess`)
-Already included in project root `.htaccess`:
-- Block `Install.php` when `admin/lock` is present.
-
-### Nginx equivalent
-If you deploy behind Nginx (which ignores `.htaccess`), add an equivalent location block:
-
-```nginx
-location = /Install.php {
-    if (-f $document_root/admin/lock) {
-        return 403;
-    }
-    include fastcgi_params;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    fastcgi_pass php-fpm;
-}
-```
-
-> Tip: remove or rename `Install.php` after first install for defense in depth.
-
-## Development notes
-- The addon/hook model is the primary extension mechanism; prefer hook-based customization over editing core templates directly.
-- Keep SQLite path handling relative to project root to avoid environment drift.
-
-## License
-This repository is now licensed under the **MIT License** (see `LICENSE`), which is generally the best default for software projects like this CMS because it is simple and permissive.
-
-### Can we use Creative Commons?
-Yes, but usually for **non-code content** (for example docs, themes, images, seed content, or blog content), not for the PHP application code itself.
-
-A common approach is:
-- Keep code under MIT (or Apache-2.0).
-- License docs/content/assets separately under a Creative Commons license such as **CC BY 4.0** or **CC BY-SA 4.0**.
+This project is licensed under the **MIT License**. See `LICENSE`.
