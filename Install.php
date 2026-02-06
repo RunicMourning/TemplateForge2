@@ -10,28 +10,71 @@ if (!function_exists('get_site_settings')) {
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+function hash_equals_safe(string $known, string $user): bool {
+    if (function_exists('hash_equals')) {
+        return hash_equals($known, $user);
+    }
+    if (strlen($known) !== strlen($user)) return false;
+    $res = 0;
+    for ($i = 0; $i < strlen($known); $i++) {
+        $res |= ord($known[$i]) ^ ord($user[$i]);
+    }
+    return $res === 0;
+}
+
 $db_path = __DIR__ . '/db/cms.db';
 $lock_file = __DIR__ . '/admin/lock';
 $error = null;
 $installation_success = false;
 $installer_locked = file_exists($lock_file);
+$app_env = strtolower((string) getenv('APP_ENV'));
+$is_production = in_array($app_env, ['prod', 'production'], true);
+$allow_production_installer = getenv('ALLOW_INSTALLER_IN_PRODUCTION') === '1';
+$setup_token = trim((string) getenv('INSTALLER_SETUP_TOKEN'));
+$provided_setup_token = trim((string) ($_POST['setup_token'] ?? $_GET['setup_token'] ?? ''));
+
+if (empty($_SESSION['installer_csrf'])) {
+    $_SESSION['installer_csrf'] = bin2hex(random_bytes(32));
+}
+
+$has_valid_setup_token = $setup_token !== '' && $provided_setup_token !== '' && hash_equals_safe($setup_token, $provided_setup_token);
+
+if ($is_production && !$allow_production_installer) {
+    $installer_locked = true;
+    $error = 'Installer is disabled in production. Set ALLOW_INSTALLER_IN_PRODUCTION=1 only for controlled setup windows.';
+}
 
 // --- IONOS COMPATIBLE LOGIC ---
 if ($installer_locked) {
     $step = '1';
-    $error = 'Installer is locked. Remove admin/lock only if you intentionally need to reinstall.';
+    if ($error === null) {
+        $error = 'Installer is locked. Remove admin/lock only if you intentionally need to reinstall.';
+    }
+} elseif ($setup_token === '') {
+    $step = '1';
+    $error = 'Installer token is not configured. Set INSTALLER_SETUP_TOKEN in your environment before continuing.';
+} elseif (!$has_valid_setup_token) {
+    $step = '1';
+    $error = 'Invalid or missing setup token. Provide the correct one-time installer token to continue.';
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_user'])) {
     $step = '3';
     
     try {
+        if (!isset($_POST['installer_csrf']) || !hash_equals_safe($_SESSION['installer_csrf'], (string) $_POST['installer_csrf'])) {
+            throw new RuntimeException('Invalid installer request token (CSRF check failed).');
+        }
+
         if (!file_exists(__DIR__ . '/db')) @mkdir(__DIR__ . '/db', 0777, true);
         if (!file_exists(__DIR__ . '/uploads')) @mkdir(__DIR__ . '/uploads', 0777, true);
 
-        // Remove old DB if exists to start fresh
-        if (file_exists($db_path)) unlink($db_path);
+        // Refuse destructive reinstall if an existing database is present.
+        if (file_exists($db_path) && filesize($db_path) > 0) {
+            throw new RuntimeException('Existing database detected. Destructive reinstall is disabled. Remove DB manually after backup if intentional.');
+        }
 
         $db = new PDO("sqlite:$db_path");
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $db->exec('PRAGMA foreign_keys = ON');
 
         // --- 1. Schema Creation (Old + New Combined) ---
         $db->exec("CREATE TABLE pages (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, slug TEXT UNIQUE, content TEXT)");
@@ -58,8 +101,12 @@ if ($installer_locked) {
         $db->exec("CREATE INDEX idx_analytics_vid ON analytics(visitor_id)");
 
         // --- 2. Admin Creation ---
-        $user = $_POST['admin_user'] ?: 'admin';
-        $pass = password_hash($_POST['admin_pass'] ?: 'admin123', PASSWORD_DEFAULT);
+        $user = trim((string) ($_POST['admin_user'] ?? 'admin')) ?: 'admin';
+        $raw_pass = (string) ($_POST['admin_pass'] ?? '');
+        if (strlen($raw_pass) < 12) {
+            throw new RuntimeException('Admin password must be at least 12 characters long.');
+        }
+        $pass = password_hash($raw_pass, PASSWORD_DEFAULT);
         $db->prepare("INSERT INTO users (username, password) VALUES (?, ?)")->execute([$user, $pass]);
 
         // --- 3. Seeding Content (Your Original Content) ---
@@ -78,7 +125,7 @@ if ($installer_locked) {
         $db->prepare("INSERT INTO posts (title, slug, category, content, excerpt, author) VALUES (?,?,?,?,?,?)")
            ->execute(['First Post', 'hello-world', 'General', 'Welcome to your blog.', 'Initial post...', $user]);
 
-        if (@file_put_contents($lock_file, "Installed on " . date('c') . PHP_EOL) === false) {
+        if (@file_put_contents($lock_file, "Installed on " . date('c') . PHP_EOL . "IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown') . PHP_EOL) === false) {
             throw new RuntimeException('Unable to create installer lock file at admin/lock.');
         }
 
@@ -100,6 +147,7 @@ $requirements = [
     'Folder /uploads' => is_writable(__DIR__ . '/uploads') || is_writable(__DIR__)
 ];
 $all_passed = !in_array(false, $requirements);
+$safe_setup_token = htmlspecialchars($provided_setup_token, ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -123,6 +171,9 @@ $all_passed = !in_array(false, $requirements);
     </div>
     
     <div class="card-body p-4">
+        <?php if ($error && !$installer_locked): ?>
+            <div class="alert alert-danger small"><?php echo htmlspecialchars($error, ENT_QUOTES, "UTF-8"); ?></div>
+        <?php endif; ?>
         <?php if ($installation_success): ?>
             <div class="text-center py-3">
                 <i class="bi bi-check-circle-fill text-success display-4"></i>
@@ -141,8 +192,9 @@ $all_passed = !in_array(false, $requirements);
 
         <?php elseif ($step == '2'): ?>
             <h6 class="fw-bold text-muted mb-3">Admin Configuration</h6>
-            <?php if($error) echo "<div class='alert alert-danger small'>$error</div>"; ?>
             <form action="" method="POST">
+                <input type="hidden" name="setup_token" value="<?php echo $safe_setup_token; ?>">
+                <input type="hidden" name="installer_csrf" value="<?php echo htmlspecialchars($_SESSION['installer_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Master Username</label>
                     <input type="text" name="admin_user" class="form-control" value="admin" required>
@@ -164,7 +216,12 @@ $all_passed = !in_array(false, $requirements);
                 </li>
                 <?php endforeach; ?>
             </ul>
-            <a href="?step=2" class="btn btn-primary w-100 py-2 fw-bold <?php echo !$all_passed ? 'disabled' : ''; ?>">Initialize Core</a>
+            <form method="GET" class="mt-3">
+                <input type="hidden" name="step" value="2">
+                <label class="form-label small fw-bold">Installer Setup Token</label>
+                <input type="password" name="setup_token" class="form-control mb-2" placeholder="Required" required>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold <?php echo !$all_passed ? 'disabled' : ''; ?>">Initialize Core</button>
+            </form>
         <?php endif; ?>
     </div>
 </div>
