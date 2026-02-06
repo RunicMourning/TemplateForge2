@@ -31,11 +31,22 @@ $app_env = strtolower((string) getenv('APP_ENV'));
 $is_production = in_array($app_env, ['prod', 'production'], true);
 $allow_production_installer = getenv('ALLOW_INSTALLER_IN_PRODUCTION') === '1';
 $setup_token = trim((string) getenv('INSTALLER_SETUP_TOKEN'));
+$is_ephemeral_setup_token = false;
 $provided_setup_token = trim((string) ($_POST['setup_token'] ?? $_GET['setup_token'] ?? ''));
 $installer_session_authorized = !empty($_SESSION['installer_setup_authorized']);
 
 if (empty($_SESSION['installer_csrf'])) {
     $_SESSION['installer_csrf'] = bin2hex(random_bytes(32));
+}
+
+// Development convenience: create a per-session setup token when no env token is configured.
+// This keeps the installer gated while avoiding a dead-end setup loop in local/dev environments.
+if ($setup_token === '' && !$is_production) {
+    if (empty($_SESSION['installer_ephemeral_setup_token'])) {
+        $_SESSION['installer_ephemeral_setup_token'] = bin2hex(random_bytes(16));
+    }
+    $setup_token = (string) $_SESSION['installer_ephemeral_setup_token'];
+    $is_ephemeral_setup_token = true;
 }
 
 $has_valid_setup_token = $setup_token !== '' && $provided_setup_token !== '' && hash_equals_safe($setup_token, $provided_setup_token);
@@ -184,6 +195,13 @@ $all_passed = !in_array(false, $requirements);
     <div class="card-body p-4">
         <?php if ($error && !$installer_locked): ?>
             <div class="alert alert-danger small"><?php echo htmlspecialchars($error, ENT_QUOTES, "UTF-8"); ?></div>
+        <?php endif; ?>
+        <?php if ($is_ephemeral_setup_token): ?>
+            <div class="alert alert-warning small">
+                <strong>Development token in use.</strong> Since <code>INSTALLER_SETUP_TOKEN</code> is not configured, a temporary token was created for this browser session only.
+                <div class="mt-2"><code><?php echo htmlspecialchars($setup_token, ENT_QUOTES, 'UTF-8'); ?></code></div>
+                <div class="mt-2">For production, set <code>INSTALLER_SETUP_TOKEN</code> in the server environment.</div>
+            </div>
         <?php endif; ?>
         <?php if ($installation_success): ?>
             <div class="text-center py-3">
