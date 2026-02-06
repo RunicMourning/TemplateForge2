@@ -128,3 +128,42 @@ if (!function_exists('render_queued_css')) {
         }
     }
 }
+
+if (!function_exists('csrf_token')) {
+    function csrf_token(string $context = 'global'): string {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['_csrf_tokens']) || !is_array($_SESSION['_csrf_tokens'])) {
+            $_SESSION['_csrf_tokens'] = [];
+        }
+
+        if (empty($_SESSION['_csrf_tokens'][$context])) {
+            $_SESSION['_csrf_tokens'][$context] = bin2hex(random_bytes(32));
+        }
+
+        return $_SESSION['_csrf_tokens'][$context];
+    }
+}
+
+if (!function_exists('verify_csrf_token')) {
+    function verify_csrf_token(?string $submitted_token, string $context = 'global'): bool {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['_csrf_tokens'][$context]) || !is_string($submitted_token)) {
+            return false;
+        }
+
+        return hash_equals($_SESSION['_csrf_tokens'][$context], $submitted_token);
+    }
+}
+
+if (!function_exists('csrf_input')) {
+    function csrf_input(string $context = 'global'): string {
+        $token = htmlspecialchars(csrf_token($context), ENT_QUOTES, 'UTF-8');
+        return '<input type="hidden" name="csrf_token" value="' . $token . '">';
+    }
+}

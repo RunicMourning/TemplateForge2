@@ -1,6 +1,7 @@
 <?php
 // --- 1. Background AJAX Handler for Reordering ---
 if (isset($_POST['update_order'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_navigation_order')) { http_response_code(403); die('Forbidden'); }
     $order = $_POST['order']; // Array of IDs in new sequence
     foreach ($order as $index => $id) {
         $stmt = $db->prepare("UPDATE navigation SET sort_order = ? WHERE id = ?");
@@ -12,6 +13,7 @@ if (isset($_POST['update_order'])) {
 
 // Handle Adding/Updating (as before)
 if (isset($_POST['save_nav'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_navigation_save')) { http_response_code(403); die('Forbidden'); }
     $id = $_POST['nav_id'] ?? null;
     $label = $_POST['label'];
     $url = $_POST['url'];
@@ -30,8 +32,9 @@ if (isset($_POST['save_nav'])) {
 }
 
 // Handle Delete (as before)
-if (isset($_GET['delete_nav'])) {
-    $del_id = $_GET['delete_nav'];
+if (isset($_POST['delete_nav'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_navigation_delete')) { http_response_code(403); die('Forbidden'); }
+    $del_id = (int) ($_POST['delete_nav'] ?? 0);
     $db->prepare("DELETE FROM navigation WHERE id = ?")->execute([$del_id]);
     log_activity($db, 'NAV', 'Nav Item Deleted', "ID: $del_id");
 }
@@ -50,6 +53,7 @@ $nav_items = $db->query("SELECT * FROM navigation ORDER BY sort_order ASC")->fet
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
             <form method="POST" class="row g-3 align-items-end">
+                <?php echo csrf_input('admin_navigation_save'); ?>
                 <div class="col-md-3">
                     <label class="form-label small fw-bold">Label</label>
                     <input type="text" name="label" class="form-control" placeholder="About" required>
@@ -93,9 +97,11 @@ $nav_items = $db->query("SELECT * FROM navigation ORDER BY sort_order ASC")->fet
                         <td><code><?php echo htmlspecialchars($item['url']); ?></code></td>
                         <td class="text-center sort-val"><?php echo $item['sort_order']; ?></td>
                         <td class="text-center">
-                            <a href="index.php?view=navigation&delete_nav=<?php echo $item['id']; ?>" 
-                               class="btn btn-sm btn-outline-danger" 
-                               onclick="return confirm('Remove link?')"><i class="bi bi-trash"></i></a>
+                            <form method="POST" action="index.php?view=navigation" class="d-inline" onsubmit="return confirm('Remove link?')">
+                                <?php echo csrf_input('admin_navigation_delete'); ?>
+                                <input type="hidden" name="delete_nav" value="<?php echo (int) $item['id']; ?>">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -123,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('index.php?view=navigation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'update_order=1&' + order.map(id => 'order[]=' + id).join('&')
+                body: 'update_order=1&csrf_token=' + encodeURIComponent("<?php echo csrf_token('admin_navigation_order'); ?>") + '&' + order.map(id => 'order[]=' + id).join('&')
             })
             .then(response => response.text())
             .then(data => {

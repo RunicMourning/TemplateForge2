@@ -7,6 +7,11 @@ $show_editor = isset($_GET['edit']) || isset($_GET['action']);
 
 // 1. Save/Update Logic
 if (isset($_POST['save_page'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_pages_save')) {
+        http_response_code(403);
+        log_activity($db, 'SECURITY', 'CSRF Blocked', 'pages save');
+        die('Forbidden');
+    }
     $title = $_POST['title'];
     $slug  = $_POST['slug'];
     $content = $_POST['content'];
@@ -31,9 +36,15 @@ if (isset($_POST['save_page'])) {
 }
 
 // 2. Delete Logic
-if (isset($_GET['delete'])) {
-    $db->prepare("DELETE FROM pages WHERE id = ? AND slug != 'home'")->execute([$_GET['delete']]);
-    log_activity($db, 'CRUD', 'Page Deleted', "ID: " . $_GET['delete']);
+if (isset($_POST['delete_page'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_pages_delete')) {
+        http_response_code(403);
+        log_activity($db, 'SECURITY', 'CSRF Blocked', 'pages delete');
+        die('Forbidden');
+    }
+    $delete_id = (int) ($_POST['delete_page'] ?? 0);
+    $db->prepare("DELETE FROM pages WHERE id = ? AND slug != 'home'")->execute([$delete_id]);
+    log_activity($db, 'CRUD', 'Page Deleted', "ID: " . $delete_id);
     $msg = "<div class='alert alert-warning border-0 shadow-sm rounded-4'>Page removed.</div>";
 }
 
@@ -73,6 +84,7 @@ $pages = $db->query("SELECT * FROM pages ORDER BY slug='home' DESC, id DESC")->f
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <form method="POST" action="index.php?view=pages">
+                            <?php echo csrf_input('admin_pages_save'); ?>
                             <?php if ($edit_page): ?>
                                 <input type="hidden" name="page_id" value="<?php echo $edit_page['id']; ?>">
                             <?php endif; ?>
@@ -192,9 +204,13 @@ $pages = $db->query("SELECT * FROM pages ORDER BY slug='home' DESC, id DESC")->f
                                         <i class="bi bi-pencil text-primary"></i>
                                     </a>
                                     <?php if($p['slug'] !== 'home'): ?>
-                                        <a href="index.php?view=pages&delete=<?php echo $p['id']; ?>" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 text-danger" onclick="return confirm('Delete this page permanently?')" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        <form method="POST" action="index.php?view=pages" class="d-inline" onsubmit="return confirm('Delete this page permanently?')">
+                                            <?php echo csrf_input('admin_pages_delete'); ?>
+                                            <input type="hidden" name="delete_page" value="<?php echo (int) $p['id']; ?>">
+                                            <button type="submit" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 text-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     <?php else: ?>
                                         <button class="btn btn-sm btn-white border-0 shadow-sm rounded-3 opacity-50" disabled title="Locked">
                                             <i class="bi bi-lock"></i>

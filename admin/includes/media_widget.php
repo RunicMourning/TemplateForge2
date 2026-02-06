@@ -14,6 +14,9 @@ if (!isset($_SESSION['active_media_context']) || $_SESSION['active_media_context
 
 // 2. Handle Upload
 if (isset($_POST['ajax_upload_media'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_media_upload')) {
+        die('<div class="alert alert-danger">Invalid request token.</div>');
+    }
     if (!empty($_FILES['tray_file']['name'])) {
         $relative_dir = "uploads/" . date('Y/m') . "/";
         // Adjusted path to ensure it finds the root uploads folder
@@ -41,6 +44,7 @@ if (isset($_POST['ajax_upload_media'])) {
     </div>
     <div class="card-body">
         <form method="POST" enctype="multipart/form-data" class="mb-3">
+            <?php echo csrf_input('admin_media_upload'); ?>
             <div class="input-group input-group-sm">
                 <input type="file" name="tray_file" class="form-control" required>
                 <button class="btn btn-primary" type="submit" name="ajax_upload_media">Upload</button>

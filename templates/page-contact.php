@@ -7,7 +7,9 @@ $subject_array = explode("\n", str_replace("\r", "", $raw_subjects));
 
 $status = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (validate_contact_form($_POST, $settings['turnstile_secret_key'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'contact_form')) {
+        $status = "<div class='alert alert-danger shadow-sm'>Security verification failed. Please refresh and try again.</div>";
+    } elseif (validate_contact_form($_POST, $settings['turnstile_secret_key'])) {
         $stmt = $db->prepare("INSERT INTO contact_messages (sender_name, sender_email, subject, message) VALUES (?, ?, ?, ?)");
         $stmt->execute([
             $_POST['name'],
@@ -37,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2 class="fw-bold text-dark mb-4">Send us a Message</h2>
                 
                 <form method="POST">
+                    <?php echo csrf_input('contact_form'); ?>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label small fw-bold text-uppercase text-muted">Full Name</label>
