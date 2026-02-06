@@ -17,7 +17,7 @@ Scope: Actionable security worklist derived from static code review.
 
 ## 🔴 Priority 1 — Critical (do first)
 
-### 1) Lock down installer so it cannot be re-run in production
+### 1) Harden installer access controls in production
 **Problem**
 - `Install.php` can recreate and wipe the DB if someone posts installer fields.
 - Existing DB file can be deleted during installation flow.
@@ -26,13 +26,10 @@ Scope: Actionable security worklist derived from static code review.
 - Site takeover and total data loss are possible if installer remains reachable.
 
 **What to do**
-- Add an install lock file (for example: `db/.installed`) after successful installation.
-- In `Install.php`, immediately block execution if lock file exists.
 - Require a one-time setup secret/token for installation requests.
 - Add server rule (Apache/Nginx) to deny public access to `Install.php` after deployment.
 
 **Definition of done**
-- Installer returns 403 or redirect when lock is present.
 - Fresh setup requires valid setup token.
 - Re-running installer cannot wipe existing DB.
 
@@ -194,7 +191,7 @@ Scope: Actionable security worklist derived from static code review.
 ## Suggested sprint plan
 
 ### Sprint 1 (blocking risks)
-- [ ] Installer lock + setup token + production deny rule
+- [ ] Setup token + production deny rule for installer
 - [ ] Admin include allowlist
 - [ ] Upload allowlist + MIME validation + non-executable uploads
 
@@ -217,7 +214,7 @@ Scope: Actionable security worklist derived from static code review.
 - Search for unsafe patterns (`include $`, destructive GET actions, raw output sinks).
 
 2. Manual checks
-- Attempt installer re-run after lock.
+- Verify installer is inaccessible in production without authorized setup flow.
 - Attempt CSRF via cross-origin form to admin endpoints.
 - Attempt upload of blocked extensions and spoofed MIME files.
 - Verify session cookie flags in browser devtools.
