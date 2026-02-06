@@ -24,6 +24,15 @@ Options -Indexes +FollowSymLinks
 RewriteEngine On
 RewriteBase /
 
+# ----------------------------------------------------------------------
+# SECURITY: LOCK INSTALLER ROUTE AFTER DEPLOYMENT
+# ----------------------------------------------------------------------
+# If admin/lock exists (created by installer), block public access to Install.php.
+# This gives a web-server-level deny in addition to the runtime installer lock.
+RewriteCond %{REQUEST_URI} ^/Install\.php$ [NC]
+RewriteCond %{DOCUMENT_ROOT}/admin/lock -f
+RewriteRule ^ - [F,L]
+
 # Custom 404 Handler
 ErrorDocument 404 /404.html
 

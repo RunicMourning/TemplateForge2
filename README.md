@@ -106,6 +106,31 @@ I ran static and syntax-level checks focused on common web-app risks.
 - Limit/admin-sanitize HTML-capable fields or use trusted-editor-only policy with role controls.
 - Add security headers (`Content-Security-Policy`, `X-Frame-Options`, `Referrer-Policy`, etc.).
 
+
+## Production hardening for installer route
+
+`Install.php` is runtime-locked by `admin/lock`, and Apache is now configured to return **403 Forbidden** for direct requests to `Install.php` once that lock file exists.
+
+### Apache (`.htaccess`)
+Already included in project root `.htaccess`:
+- Block `Install.php` when `admin/lock` is present.
+
+### Nginx equivalent
+If you deploy behind Nginx (which ignores `.htaccess`), add an equivalent location block:
+
+```nginx
+location = /Install.php {
+    if (-f $document_root/admin/lock) {
+        return 403;
+    }
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_pass php-fpm;
+}
+```
+
+> Tip: remove or rename `Install.php` after first install for defense in depth.
+
 ## Development notes
 - The addon/hook model is the primary extension mechanism; prefer hook-based customization over editing core templates directly.
 - Keep SQLite path handling relative to project root to avoid environment drift.
