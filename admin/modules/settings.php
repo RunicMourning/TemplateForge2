@@ -3,6 +3,7 @@ $msg = "";
 
 // 1. Handle Settings Update
 if (isset($_POST['update_settings'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_settings_update')) { http_response_code(403); die('Forbidden'); }
     foreach ($_POST['config'] as $key => $value) {
         $stmt = $db->prepare("UPDATE settings SET value = ? WHERE key = ?");
         $stmt->execute([$value, $key]);
@@ -13,6 +14,7 @@ if (isset($_POST['update_settings'])) {
 
 // 2. Handle Category Addition
 if (isset($_POST['add_category'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_settings_add_category')) { http_response_code(403); die('Forbidden'); }
     $cat = trim($_POST['new_category']);
     if (!empty($cat)) {
         try {
@@ -27,9 +29,11 @@ if (isset($_POST['add_category'])) {
 }
 
 // 3. Handle Category Deletion
-if (isset($_GET['delete_cat'])) {
+if (isset($_POST['delete_cat'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_settings_delete_category')) { http_response_code(403); die('Forbidden'); }
+    $delete_cat_id = (int) ($_POST['delete_cat'] ?? 0);
     $stmt = $db->prepare("DELETE FROM categories WHERE id = ?");
-    $stmt->execute([$_GET['delete_cat']]);
+    $stmt->execute([$delete_cat_id]);
     $msg = "<div class='alert alert-warning border-0 shadow-sm'>Category removed.</div>";
 }
 
@@ -56,6 +60,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll
                 </div>
                 <div class="card-body p-4">
                     <form method="POST" class="row g-3">
+                        <?php echo csrf_input('admin_settings_update'); ?>
                         <div class="col-12">
                             <label class="form-label fw-bold">Site Name</label>
                             <input type="text" name="config[site_name]" value="<?php echo htmlspecialchars($res['site_name'] ?? ''); ?>" class="form-control" required>
@@ -79,6 +84,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll
                 </div>
                 <div class="card-body">
                     <form method="POST" class="input-group mb-3">
+                        <?php echo csrf_input('admin_settings_add_category'); ?>
                         <input type="text" name="new_category" class="form-control" placeholder="New category name..." required>
                         <button class="btn btn-success" type="submit" name="add_category">Add</button>
                     </form>
@@ -87,11 +93,13 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll
                         <?php foreach($categories as $c): ?>
                         <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                             <span><?php echo htmlspecialchars($c['name']); ?></span>
-                            <a href="index.php?view=settings&delete_cat=<?php echo $c['id']; ?>" 
-                               class="text-danger" 
-                               onclick="return confirm('Remove this category?')">
-                               <i class="bi bi-x-circle"></i>
-                            </a>
+                            <form method="POST" action="index.php?view=settings" class="d-inline" onsubmit="return confirm('Remove this category?')">
+                                <?php echo csrf_input('admin_settings_delete_category'); ?>
+                                <input type="hidden" name="delete_cat" value="<?php echo (int) $c['id']; ?>">
+                                <button type="submit" class="btn btn-link text-danger p-0">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </form>
                         </li>
                         <?php endforeach; ?>
                     </ul>

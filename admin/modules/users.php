@@ -3,6 +3,7 @@ $msg = "";
 
 // 1. Handle New User
 if (isset($_POST['add_user'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_users_add')) { http_response_code(403); die('Forbidden'); }
     $user = $_POST['new_username'];
     $pass = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
     try {
@@ -14,15 +15,18 @@ if (isset($_POST['add_user'])) {
 }
 
 // 2. Handle Deletion
-if (isset($_GET['delete_user'])) {
-    if ($_GET['delete_user'] != $_SESSION['user_id']) {
-        $db->prepare("DELETE FROM users WHERE id = ?")->execute([$_GET['delete_user']]);
+if (isset($_POST['delete_user'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_users_delete')) { http_response_code(403); die('Forbidden'); }
+    $delete_user_id = (int) ($_POST['delete_user'] ?? 0);
+    if ($delete_user_id != $_SESSION['user_id']) {
+        $db->prepare("DELETE FROM users WHERE id = ?")->execute([$delete_user_id]);
         $msg = "<div class='alert alert-warning'>User removed.</div>";
     }
 }
 
 // 3. Update Self
 if (isset($_POST['update_me'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_users_update_me')) { http_response_code(403); die('Forbidden'); }
     $user = $_POST['my_username'];
     $pass = $_POST['my_password'];
     if (!empty($pass)) {
@@ -49,6 +53,7 @@ $all_users = $db->query("SELECT id, username FROM users")->fetchAll();
                 <div class="card-body">
                     <h5 class="fw-bold">My Account</h5>
                     <form method="POST">
+                        <?php echo csrf_input('admin_users_update_me'); ?>
                         <div class="mb-2">
                             <label class="small fw-bold">Username</label>
                             <input type="text" name="my_username" value="<?php echo htmlspecialchars($_SESSION['username']); ?>" class="form-control" required>
@@ -66,6 +71,7 @@ $all_users = $db->query("SELECT id, username FROM users")->fetchAll();
                 <div class="card-body">
                     <h5 class="fw-bold">Add User</h5>
                     <form method="POST">
+                        <?php echo csrf_input('admin_users_add'); ?>
                         <input type="text" name="new_username" class="form-control mb-2" placeholder="Username" required>
                         <input type="password" name="new_password" class="form-control mb-2" placeholder="Password" required>
                         <button type="submit" name="add_user" class="btn btn-success w-100">Create Account</button>
@@ -93,7 +99,11 @@ $all_users = $db->query("SELECT id, username FROM users")->fetchAll();
                                 </td>
                                 <td class="text-end pe-3">
                                     <?php if($u['id'] != $_SESSION['user_id']): ?>
-                                        <a href="index.php?view=users&delete_user=<?php echo $u['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete user?')">Remove</a>
+                                        <form method="POST" action="index.php?view=users" class="d-inline" onsubmit="return confirm('Delete user?')">
+                                            <?php echo csrf_input('admin_users_delete'); ?>
+                                            <input type="hidden" name="delete_user" value="<?php echo (int) $u['id']; ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                        </form>
                                     <?php endif; ?>
                                 </td>
                             </tr>

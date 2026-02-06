@@ -7,15 +7,26 @@ $current_user = $_SESSION['username'] ?? 'Admin';
 $show_editor = isset($_GET['edit']) || isset($_GET['action']); 
 
 // --- DELETE LOGIC ---
-if (isset($_GET['delete'])) {
+if (isset($_POST['delete_post'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_blog_delete')) {
+        http_response_code(403);
+        log_activity($db, 'SECURITY', 'CSRF Blocked', 'blog delete');
+        die('Forbidden');
+    }
+    $delete_id = (int) ($_POST['delete_post'] ?? 0);
     $stmt = $db->prepare("DELETE FROM posts WHERE id = ?");
-    $stmt->execute([$_GET['delete']]);
-    log_activity($db, 'CRUD', 'Post Deleted', "ID: " . $_GET['delete']);
+    $stmt->execute([$delete_id]);
+    log_activity($db, 'CRUD', 'Post Deleted', "ID: " . $delete_id);
     $msg = "<div class='alert alert-warning border-0 shadow-sm rounded-4'>Post deleted successfully.</div>";
 }
 
 // --- SAVE/UPDATE LOGIC ---
 if (isset($_POST['save_post'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_blog_save')) {
+        http_response_code(403);
+        log_activity($db, 'SECURITY', 'CSRF Blocked', 'blog save');
+        die('Forbidden');
+    }
     $title    = $_POST['title'];
     $slug     = $_POST['slug'];
     $category = $_POST['category'];
@@ -92,6 +103,7 @@ $all_posts = $stmt->fetchAll();
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <form method="POST" action="index.php?view=blog" id="postForm">
+                            <?php echo csrf_input('admin_blog_save'); ?>
                             <?php if($edit_post): ?>
                                 <input type="hidden" name="post_id" value="<?php echo $edit_post['id']; ?>">
                             <?php endif; ?>
@@ -238,9 +250,13 @@ $all_posts = $stmt->fetchAll();
                                 <a href="index.php?view=blog&edit=<?php echo $p['id']; ?>" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 me-1" title="Edit">
                                     <i class="bi bi-pencil text-primary"></i>
                                 </a>
-                                <a href="index.php?view=blog&delete=<?php echo $p['id']; ?>" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 text-danger" onclick="return confirm('Permanent delete this post?')" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </a>
+                                <form method="POST" action="index.php?view=blog" class="d-inline" onsubmit="return confirm('Permanent delete this post?')">
+                                    <?php echo csrf_input('admin_blog_delete'); ?>
+                                    <input type="hidden" name="delete_post" value="<?php echo (int) $p['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 text-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         <?php endforeach; ?>

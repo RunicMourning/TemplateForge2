@@ -1,6 +1,7 @@
 <?php
 // 1. Handle "Prune Logs"
 if (isset($_POST['prune_logs'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_logs_prune')) { http_response_code(403); die('Forbidden'); }
     $stmt = $db->prepare("DELETE FROM logs WHERE timestamp < datetime('now', '-7 days')");
     $stmt->execute();
     $count = $stmt->rowCount();
@@ -42,6 +43,7 @@ $colors = [
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>System Logs</h2>
         <form method="POST" onsubmit="return confirm('Are you sure you want to delete logs older than 7 days?');">
+            <?php echo csrf_input('admin_logs_prune'); ?>
             <button type="submit" name="prune_logs" class="btn btn-warning">
                 🧹 Prune Older Than 7 Days
             </button>
