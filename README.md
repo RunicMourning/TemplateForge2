@@ -136,4 +136,11 @@ location = /Install.php {
 - Keep SQLite path handling relative to project root to avoid environment drift.
 
 ## License
-No license file was found in this repository. Add one if distribution or reuse is intended.
+This repository is now licensed under the **MIT License** (see `LICENSE`), which is generally the best default for software projects like this CMS because it is simple and permissive.
+
+### Can we use Creative Commons?
+Yes, but usually for **non-code content** (for example docs, themes, images, seed content, or blog content), not for the PHP application code itself.
+
+A common approach is:
+- Keep code under MIT (or Apache-2.0).
+- License docs/content/assets separately under a Creative Commons license such as **CC BY 4.0** or **CC BY-SA 4.0**.
