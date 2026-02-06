@@ -1,0 +1,50 @@
+# ----------------------------------------------------------------------
+# SECURITY: PROTECT SYSTEM FILES
+# ----------------------------------------------------------------------
+
+# 1. Prevent access to the SQLite database file
+<Files "cms.db">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# 2. Prevent access to any .db, .log, or .ini files
+<FilesMatch "\.(db|log|ini)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 3. Prevent directory listing
+Options -Indexes +FollowSymLinks
+
+# ----------------------------------------------------------------------
+# REWRITE ENGINE
+# ----------------------------------------------------------------------
+
+RewriteEngine On
+RewriteBase /
+
+# Custom 404 Handler
+ErrorDocument 404 /404.html
+
+# 1. SPECIFIC FILTERS
+# Handle Categories: category-General.html -> blog.php?category=General
+RewriteRule ^category-([^/]+)\.html$ blog.php?category=$1 [L,QSA]
+
+# Handle Authors: author-Admin.html -> blog.php?author=Admin
+RewriteRule ^author-([^/]+)\.html$ blog.php?author=$1 [L,QSA]
+
+# 2. BLOG POSTS
+# Handle Blog Posts (blog-pageslug.html -> post.php?slug=pageslug)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^blog-(.*)\.html$ post.php?slug=$1 [L,QSA]
+
+# 3. BROAD REGULAR PAGES
+# Handle Regular Pages (pageslug.html -> index.php?pageslug=slug)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)\.html$ index.php?pageslug=$1 [L,QSA]
+
+# Optional: Redirect index.html to home
+RewriteRule ^index\.html$ / [R=301,L]

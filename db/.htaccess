@@ -1,0 +1,6 @@
+# ----------------------------------------------------------------------
+# LAYER 2: Directory Lockdown
+# ----------------------------------------------------------------------
+# This prevents ANY file in this folder from being viewed via a browser
+Order deny,allow
+Deny from all
