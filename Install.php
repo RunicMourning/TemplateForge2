@@ -11,11 +11,16 @@ if (!function_exists('get_site_settings')) {
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 $db_path = __DIR__ . '/db/cms.db';
+$lock_file = __DIR__ . '/admin/lock';
 $error = null;
 $installation_success = false;
+$installer_locked = file_exists($lock_file);
 
 // --- IONOS COMPATIBLE LOGIC ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_user'])) {
+if ($installer_locked) {
+    $step = '1';
+    $error = 'Installer is locked. Remove admin/lock only if you intentionally need to reinstall.';
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_user'])) {
     $step = '3';
     
     try {
@@ -73,6 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_user'])) {
         $db->prepare("INSERT INTO posts (title, slug, category, content, excerpt, author) VALUES (?,?,?,?,?,?)")
            ->execute(['First Post', 'hello-world', 'General', 'Welcome to your blog.', 'Initial post...', $user]);
 
+        if (@file_put_contents($lock_file, "Installed on " . date('c') . PHP_EOL) === false) {
+            throw new RuntimeException('Unable to create installer lock file at admin/lock.');
+        }
+
         $installation_success = true;
 
     } catch (Exception $e) {
@@ -125,6 +134,11 @@ $all_passed = !in_array(false, $requirements);
                 </div>
             </div>
 
+        <?php elseif ($installer_locked): ?>
+            <div class="alert alert-warning small mb-0">
+                <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+
         <?php elseif ($step == '2'): ?>
             <h6 class="fw-bold text-muted mb-3">Admin Configuration</h6>
             <?php if($error) echo "<div class='alert alert-danger small'>$error</div>"; ?>
@@ -135,7 +149,7 @@ $all_passed = !in_array(false, $requirements);
                 </div>
                 <div class="mb-4">
                     <label class="form-label small fw-bold">Master Password</label>
-                    <input type="password" name="admin_pass" class="form-control" placeholder="••••••••" required>
+                    <input type="password" name="admin_pass" class="form-control" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Finalize Installation</button>
             </form>
