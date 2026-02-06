@@ -32,12 +32,23 @@ $is_production = in_array($app_env, ['prod', 'production'], true);
 $allow_production_installer = getenv('ALLOW_INSTALLER_IN_PRODUCTION') === '1';
 $setup_token = trim((string) getenv('INSTALLER_SETUP_TOKEN'));
 $provided_setup_token = trim((string) ($_POST['setup_token'] ?? $_GET['setup_token'] ?? ''));
+$installer_session_authorized = !empty($_SESSION['installer_setup_authorized']);
 
 if (empty($_SESSION['installer_csrf'])) {
     $_SESSION['installer_csrf'] = bin2hex(random_bytes(32));
 }
 
 $has_valid_setup_token = $setup_token !== '' && $provided_setup_token !== '' && hash_equals_safe($setup_token, $provided_setup_token);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enter_setup_token'])) {
+    if ($has_valid_setup_token) {
+        $_SESSION['installer_setup_authorized'] = true;
+        $installer_session_authorized = true;
+    } else {
+        unset($_SESSION['installer_setup_authorized']);
+        $installer_session_authorized = false;
+    }
+}
 
 if ($is_production && !$allow_production_installer) {
     $installer_locked = true;
@@ -53,7 +64,7 @@ if ($installer_locked) {
 } elseif ($setup_token === '') {
     $step = '1';
     $error = 'Installer token is not configured. Set INSTALLER_SETUP_TOKEN in your environment before continuing.';
-} elseif (!$has_valid_setup_token) {
+} elseif (!$installer_session_authorized && !$has_valid_setup_token) {
     $step = '1';
     $error = 'Invalid or missing setup token. Provide the correct one-time installer token to continue.';
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_user'])) {
@@ -129,6 +140,7 @@ if ($installer_locked) {
             throw new RuntimeException('Unable to create installer lock file at admin/lock.');
         }
 
+        unset($_SESSION['installer_setup_authorized']);
         $installation_success = true;
 
     } catch (Exception $e) {
@@ -136,7 +148,7 @@ if ($installer_locked) {
         $step = '2'; 
     }
 } else {
-    $step = $_GET['step'] ?? '1';
+    $step = ($installer_session_authorized || $has_valid_setup_token) ? '2' : '1';
 }
 
 // Requirement Checks
@@ -147,7 +159,6 @@ $requirements = [
     'Folder /uploads' => is_writable(__DIR__ . '/uploads') || is_writable(__DIR__)
 ];
 $all_passed = !in_array(false, $requirements);
-$safe_setup_token = htmlspecialchars($provided_setup_token, ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -193,7 +204,6 @@ $safe_setup_token = htmlspecialchars($provided_setup_token, ENT_QUOTES, 'UTF-8')
         <?php elseif ($step == '2'): ?>
             <h6 class="fw-bold text-muted mb-3">Admin Configuration</h6>
             <form action="" method="POST">
-                <input type="hidden" name="setup_token" value="<?php echo $safe_setup_token; ?>">
                 <input type="hidden" name="installer_csrf" value="<?php echo htmlspecialchars($_SESSION['installer_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Master Username</label>
@@ -216,8 +226,8 @@ $safe_setup_token = htmlspecialchars($provided_setup_token, ENT_QUOTES, 'UTF-8')
                 </li>
                 <?php endforeach; ?>
             </ul>
-            <form method="GET" class="mt-3">
-                <input type="hidden" name="step" value="2">
+            <form method="POST" class="mt-3">
+                <input type="hidden" name="enter_setup_token" value="1">
                 <label class="form-label small fw-bold">Installer Setup Token</label>
                 <input type="password" name="setup_token" class="form-control mb-2" placeholder="Required" required>
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-bold <?php echo !$all_passed ? 'disabled' : ''; ?>">Initialize Core</button>
