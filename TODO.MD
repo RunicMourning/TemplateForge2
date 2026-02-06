@@ -18,20 +18,52 @@ Scope: Actionable security worklist derived from static code review.
 ## 🔴 Priority 1 — Critical (do first)
 
 ### 1) Harden installer access controls in production
-**Problem**
-- `Install.php` can recreate and wipe the DB if someone posts installer fields.
-- Existing DB file can be deleted during installation flow.
+**Status (reviewed 2026-02-06):** ⚠️ **Partially complete**
 
-**Why it matters**
-- Site takeover and total data loss are possible if installer remains reachable.
+**What is already fixed in `Install.php`**
+- Installation now requires a valid `INSTALLER_SETUP_TOKEN` that is compared with a timing-safe check.
+- Reinstall is blocked when an existing non-empty DB file is present.
+- Installer now sets/uses a CSRF token for the final installation POST.
+- Production installs are blocked unless `ALLOW_INSTALLER_IN_PRODUCTION=1` is explicitly set.
 
-**What to do**
-- Require a one-time setup secret/token for installation requests.
-- Add server rule (Apache/Nginx) to deny public access to `Install.php` after deployment.
+**What still remains**
+- Add server/web config to deny direct public access to `Install.php` after first deployment (Apache/Nginx).
+
+**How to implement "Web server denies installer route post-deployment"**
+1. **Apache (`.htaccess` in project root)**
+   ```apache
+   <Files "Install.php">
+       Require all denied
+   </Files>
+   ```
+   - For legacy Apache 2.2 compatibility:
+   ```apache
+   <Files "Install.php">
+       Order allow,deny
+       Deny from all
+   </Files>
+   ```
+
+2. **Nginx (inside your site `server {}` block)**
+   ```nginx
+   location = /Install.php {
+       deny all;
+       return 403;
+   }
+   ```
+
+3. **Optional deployment hardening (best practice)**
+   - Rename/remove `Install.php` after first successful install.
+   - Keep the `admin/lock` file in place and backed up with your deployment state.
+
+4. **Verification steps**
+   - From shell: `curl -i https://your-domain/Install.php` should return `403` or `404`.
+   - From browser: visiting `/Install.php` must not render installer HTML.
 
 **Definition of done**
-- Fresh setup requires valid setup token.
-- Re-running installer cannot wipe existing DB.
+- Fresh setup requires valid setup token. ✅
+- Re-running installer cannot wipe existing DB. ✅
+- Web server denies installer route post-deployment. ⏳
 
 ---
 
