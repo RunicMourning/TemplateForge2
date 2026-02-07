@@ -144,6 +144,13 @@ Security-focused checks run during this update included:
 
 ---
 
+
+## 🛣️ Feature roadmap ideas
+
+For a prioritized list of proposed improvements, see [`docs/feature-enhancements.md`](docs/feature-enhancements.md).
+
+---
+
 ## 📁 Directory map
 
 ```text
