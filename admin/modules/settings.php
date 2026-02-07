@@ -69,6 +69,9 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll
                             <label class="form-label fw-bold">Footer Text</label>
                             <input type="text" name="config[footer_text]" value="<?php echo htmlspecialchars($res['footer_text'] ?? ''); ?>" class="form-control">
                         </div>
+
+                        <?php if (function_exists('run_hook')) run_hook('admin_settings_ui'); ?>
+
                         <div class="col-12 pt-2">
                             <button type="submit" name="update_settings" class="btn btn-primary px-4">Save Configuration</button>
                         </div>
