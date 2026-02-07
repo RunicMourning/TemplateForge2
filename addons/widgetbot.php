@@ -5,7 +5,7 @@
  */
 
 // 1. Sidebar CSS (Right side, 50% width)
-add_hook('header_bottom', function() {
+add_hook('head_bottom', function() {
     echo '
     <style>
         iframe[src*="widgetbot.io"] {
