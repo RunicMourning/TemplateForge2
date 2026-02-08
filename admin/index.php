@@ -1,8 +1,17 @@
 <?php
 session_start();
 require_once '../functions.php';
+require_once '../includes/hooks.php';
+$GLOBALS['registered_hooks'] = [];
 $db = new PDO('sqlite:../db/cms.db'); // Path must be correct relative to index.php
 $settings = get_site_settings($db); // Now $settings is available everywhere!
+
+$addons_path = __DIR__ . '/../addons';
+if (is_dir($addons_path)) {
+    foreach (glob($addons_path . '/*.php') as $file) {
+        if (basename($file) !== 'index.php') include_once $file;
+    }
+}
 
 // 1. Simple Login Check (Logic only)
 if (!isset($_SESSION['user_id'])) {

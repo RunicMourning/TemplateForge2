@@ -4,9 +4,9 @@ $msg = "";
 // 1. Handle Settings Update
 if (isset($_POST['update_settings'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_settings_update')) { http_response_code(403); die('Forbidden'); }
-    foreach ($_POST['config'] as $key => $value) {
-        $stmt = $db->prepare("UPDATE settings SET value = ? WHERE key = ?");
-        $stmt->execute([$value, $key]);
+    foreach (($_POST['config'] ?? []) as $key => $value) {
+        $stmt = $db->prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
+        $stmt->execute([$key, $value]);
     }
     log_activity($db, 'SETTINGS', 'Configuration Updated', "Site settings modified");
     $msg = "<div class='alert alert-success border-0 shadow-sm'>Site settings updated!</div>";
@@ -40,6 +40,11 @@ if (isset($_POST['delete_cat'])) {
 // Fetch Data
 $res = $db->query("SELECT * FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
 $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll();
+$dynamic_sections = function_exists('get_registered_settings_sections')
+    ? get_registered_settings_sections()
+    : [];
+
+$allowed_types = ['text', 'email', 'password', 'textarea'];
 ?>
 
 <div class="container py-4">
@@ -71,6 +76,60 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll
                         </div>
 
                         <?php if (function_exists('run_hook')) run_hook('admin_settings_ui'); ?>
+
+                        <?php foreach ($dynamic_sections as $sectionId => $section): ?>
+                            <?php
+                                $section_title = htmlspecialchars($section['title'] ?? ucfirst((string) $sectionId));
+                                $section_description = htmlspecialchars($section['description'] ?? '');
+                                $section_icon = htmlspecialchars($section['icon'] ?? 'bi bi-puzzle');
+                                $fields = (isset($section['fields']) && is_array($section['fields'])) ? $section['fields'] : [];
+                            ?>
+                            <?php if (!empty($fields)): ?>
+                                <div class="card shadow-sm border-0 mb-4 border-start border-primary border-5">
+                                    <div class="card-header bg-white py-3">
+                                        <h5 class="card-title mb-0 text-primary fw-bold">
+                                            <i class="<?php echo $section_icon; ?> me-2"></i><?php echo $section_title; ?>
+                                        </h5>
+                                        <?php if (!empty($section_description)): ?>
+                                            <p class="text-muted small mb-0 mt-2"><?php echo $section_description; ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <?php foreach ($fields as $field): ?>
+                                            <?php
+                                                $key = $field['key'] ?? '';
+                                                if (!is_string($key) || $key === '') {
+                                                    continue;
+                                                }
+
+                                                $label = htmlspecialchars($field['label'] ?? $key);
+                                                $type = strtolower((string) ($field['type'] ?? 'text'));
+                                                if (!in_array($type, $allowed_types, true)) {
+                                                    $type = 'text';
+                                                }
+
+                                                $placeholder = htmlspecialchars($field['placeholder'] ?? '');
+                                                $help = htmlspecialchars($field['help'] ?? '');
+                                                $default_value = (string) ($field['default'] ?? '');
+                                                $value = htmlspecialchars((string) ($res[$key] ?? $default_value));
+                                                $rows = max(2, (int) ($field['rows'] ?? 4));
+                                            ?>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold"><?php echo $label; ?></label>
+                                                <?php if ($type === 'textarea'): ?>
+                                                    <textarea name="config[<?php echo htmlspecialchars($key); ?>]" class="form-control" rows="<?php echo $rows; ?>" placeholder="<?php echo $placeholder; ?>"><?php echo $value; ?></textarea>
+                                                <?php else: ?>
+                                                    <input type="<?php echo $type; ?>" name="config[<?php echo htmlspecialchars($key); ?>]" value="<?php echo $value; ?>" class="form-control" placeholder="<?php echo $placeholder; ?>">
+                                                <?php endif; ?>
+                                                <?php if (!empty($help)): ?>
+                                                    <div class="form-text"><?php echo $help; ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
 
                         <div class="col-12 pt-2">
                             <button type="submit" name="update_settings" class="btn btn-primary px-4">Save Configuration</button>
