@@ -5,6 +5,7 @@
 
 // 1. Initialize the storage in the master global array
 $GLOBALS['registered_hooks'] = [];
+$GLOBALS['registered_settings_sections'] = [];
 
 /**
  * Registers a function or HTML string to a specific hook location.
@@ -37,4 +38,40 @@ function debug_hooks() {
     echo '' . PHP_EOL;
     echo '<script>console.log("Active Hooks Registry:", ' . json_encode($keys) . ');</script>';
     echo '' . PHP_EOL;
+}
+
+/**
+ * Registers a settings section that can be rendered in admin/modules/settings.php.
+ *
+ * Expected shape:
+ * [
+ *   'title' => 'Section title',
+ *   'description' => 'Optional helper text',
+ *   'icon' => 'bi bi-gear',
+ *   'fields' => [
+ *      [
+ *          'key' => 'setting_key',
+ *          'label' => 'Field Label',
+ *          'type' => 'text|email|password|textarea',
+ *          'placeholder' => 'Optional placeholder',
+ *          'default' => 'Default value',
+ *          'help' => 'Optional helper text',
+ *          'rows' => 4 // textarea only
+ *      ]
+ *   ]
+ * ]
+ */
+function register_settings_section(string $id, array $section): void {
+    if (!isset($section['fields']) || !is_array($section['fields'])) {
+        $section['fields'] = [];
+    }
+
+    $GLOBALS['registered_settings_sections'][$id] = $section;
+}
+
+/**
+ * Returns all dynamically-registered settings sections.
+ */
+function get_registered_settings_sections(): array {
+    return $GLOBALS['registered_settings_sections'] ?? [];
 }
