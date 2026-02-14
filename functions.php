@@ -5,8 +5,8 @@
 function log_activity($db, $category, $event, $details = '') {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'Unknown IP';
     
-    if (isset($_SESSION['username'])) {
-        $user = $_SESSION['username'];
+    if (isset($_SESSION['display_name']) || isset($_SESSION['username'])) {
+        $user = $_SESSION['display_name'] ?? $_SESSION['username'];
     } else {
         $user = ($category === '404' || $category === 'PHP Error') ? 'Guest' : 'Anonymous';
     }
@@ -165,5 +165,77 @@ if (!function_exists('csrf_input')) {
     function csrf_input(string $context = 'global'): string {
         $token = htmlspecialchars(csrf_token($context), ENT_QUOTES, 'UTF-8');
         return '<input type="hidden" name="csrf_token" value="' . $token . '">';
+    }
+}
+
+if (!function_exists('ensure_user_schema')) {
+    function ensure_user_schema(PDO $db): void {
+        $table_check = $db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+        if (!$table_check || !$table_check->fetchColumn()) {
+            return;
+        }
+
+        $columns = [];
+        $result = $db->query('PRAGMA table_info(users)');
+        if ($result) {
+            foreach ($result->fetchAll(PDO::FETCH_ASSOC) as $column) {
+                $columns[] = $column['name'] ?? '';
+            }
+        }
+
+        if (!in_array('display_name', $columns, true)) {
+            $db->exec("ALTER TABLE users ADD COLUMN display_name TEXT");
+        }
+
+        if (!in_array('permissions', $columns, true)) {
+            $db->exec("ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '[]'");
+        }
+
+        $db->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique ON users(username)');
+        $db->exec("UPDATE users SET display_name = COALESCE(NULLIF(TRIM(display_name), ''), username)");
+        $db->exec("UPDATE users SET permissions = '[]' WHERE permissions IS NULL OR TRIM(permissions) = ''");
+    }
+}
+
+if (!function_exists('available_permissions')) {
+    function available_permissions(): array {
+        return [
+            'manage_pages' => 'Manage Pages',
+            'manage_blog' => 'Manage Blog Posts',
+            'manage_navigation' => 'Manage Navigation',
+            'manage_users' => 'Manage Users',
+            'manage_settings' => 'Manage Settings',
+            'view_logs' => 'View Logs',
+            'view_analytics' => 'View Analytics',
+        ];
+    }
+}
+
+if (!function_exists('sanitize_permissions')) {
+    function sanitize_permissions($submitted): array {
+        if (!is_array($submitted)) {
+            return [];
+        }
+
+        $allowed = array_keys(available_permissions());
+        $clean = array_values(array_intersect($allowed, $submitted));
+        sort($clean);
+        return $clean;
+    }
+}
+
+
+if (!function_exists('has_permission')) {
+    function has_permission(string $permission): bool {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $assigned = $_SESSION['permissions'] ?? [];
+        if (!is_array($assigned)) {
+            return false;
+        }
+
+        return in_array($permission, $assigned, true);
     }
 }
