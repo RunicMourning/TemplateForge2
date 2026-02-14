@@ -5,6 +5,7 @@ require_once '../includes/hooks.php';
 $GLOBALS['registered_hooks'] = [];
 $db = new PDO('sqlite:../db/cms.db'); // Path must be correct relative to index.php
 $settings = get_site_settings($db); // Now $settings is available everywhere!
+ensure_user_schema($db);
 
 $addons_path = __DIR__ . '/../addons';
 if (is_dir($addons_path)) {
@@ -30,8 +31,10 @@ if (!isset($_SESSION['user_id'])) {
             session_regenerate_id(true);
             $_SESSION['user_id'] = $user['id'];
             // ADD THIS LINE:
-            $_SESSION['username'] = $user['username']; 
-            
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['display_name'] = $user['display_name'] ?? $user['username'];
+            $_SESSION['permissions'] = json_decode((string)($user['permissions'] ?? '[]'), true) ?: [];
+
             // LOG THE LOGIN
             log_activity($db, 'AUTH', 'Admin Login', "User: " . $user['username']);
             
@@ -42,6 +45,19 @@ if (!isset($_SESSION['user_id'])) {
     // Show login form if not logged in
     include 'views/login.php'; 
     exit;
+}
+
+
+// Hydrate display/permission session data for legacy sessions.
+if (!isset($_SESSION['display_name']) || !isset($_SESSION['permissions'])) {
+    $session_user = $db->prepare("SELECT username, display_name, permissions FROM users WHERE id = ?");
+    $session_user->execute([$_SESSION['user_id']]);
+    $session_row = $session_user->fetch(PDO::FETCH_ASSOC);
+    if ($session_row) {
+        $_SESSION['username'] = $session_row['username'];
+        $_SESSION['display_name'] = $session_row['display_name'] ?? $session_row['username'];
+        $_SESSION['permissions'] = json_decode((string)($session_row['permissions'] ?? '[]'), true) ?: [];
+    }
 }
 
 // 2. Module Routing

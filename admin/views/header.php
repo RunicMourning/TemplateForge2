@@ -98,7 +98,7 @@
     </div>
     <div class="dropdown">
         <a href="#" class="d-flex align-items-center text-dark text-decoration-none text-capitalize dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="bi bi-person-circle pe-2"></i> <strong><?php echo $_SESSION['username'] ?? 'Admin'; ?></strong>
+            <i class="bi bi-person-circle pe-2"></i> <strong><?php echo htmlspecialchars($_SESSION['display_name'] ?? $_SESSION['username'] ?? 'Admin'); ?></strong>
         </a>
         <ul class="dropdown-menu dropdown-menu-end shadow">
             <li><a class="dropdown-item" href="index.php?view=users"><i class="bi bi-gear me-2"></i> Security Settings</a></li>

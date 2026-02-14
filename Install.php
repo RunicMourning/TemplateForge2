@@ -103,7 +103,7 @@ if ($installer_locked) {
 
         // --- 1. Schema Creation (Old + New Combined) ---
         $db->exec("CREATE TABLE pages (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, slug TEXT UNIQUE, content TEXT)");
-        $db->exec("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT)");
+        $db->exec("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, display_name TEXT, password TEXT, permissions TEXT DEFAULT '[]')");
         $db->exec("CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT)");
         $db->exec("CREATE TABLE navigation (id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT, url TEXT, css_class TEXT, css_id TEXT, sort_order INTEGER DEFAULT 0)");
         $db->exec("CREATE TABLE logs (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, event TEXT, details TEXT, user TEXT, ip TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)");
@@ -127,7 +127,7 @@ if ($installer_locked) {
 
         // --- 2. Admin Creation ---
         $pass = password_hash($raw_pass, PASSWORD_DEFAULT);
-        $db->prepare("INSERT INTO users (username, password) VALUES (?, ?)")->execute([$user, $pass]);
+        $db->prepare("INSERT INTO users (username, display_name, password, permissions) VALUES (?, ?, ?, ?)")->execute([$user, $user, $pass, json_encode(array_keys(available_permissions()))]);
 
         // --- 3. Seeding Content (Your Original Content) ---
         $db->exec("INSERT INTO settings (key, value) VALUES ('site_name', 'TemplateForge2'), ('footer_text', '&copy\; " . date('Y') . "')");
