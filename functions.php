@@ -197,6 +197,52 @@ if (!function_exists('ensure_user_schema')) {
     }
 }
 
+
+if (!function_exists('is_high_priority_log')) {
+    function is_high_priority_log(string $category, string $event): bool {
+        $category = strtoupper(trim($category));
+        $event = strtolower(trim($event));
+
+        if (in_array($category, ['SECURITY', 'PHP ERROR', 'FATAL ERROR'], true)) {
+            return true;
+        }
+
+        $high_priority_events = [
+            'admin login failed',
+            'admin login csrf blocked',
+            'csrf blocked',
+            'user deleted',
+        ];
+
+        return in_array($event, $high_priority_events, true);
+    }
+}
+
+if (!function_exists('get_recent_high_priority_logs')) {
+    function get_recent_high_priority_logs(PDO $db, int $limit = 5, int $hours = 24): array {
+        $limit = max(1, $limit);
+        $hours = max(1, $hours);
+
+        $rows = $db->prepare("SELECT id, category, event, details, user, ip, timestamp FROM logs WHERE timestamp >= datetime('now', ?) ORDER BY id DESC LIMIT 200");
+        $rows->execute(['-' . $hours . ' hours']);
+        $logs = $rows->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $alerts = [];
+        foreach ($logs as $log) {
+            if (!is_high_priority_log((string)($log['category'] ?? ''), (string)($log['event'] ?? ''))) {
+                continue;
+            }
+
+            $alerts[] = $log;
+            if (count($alerts) >= $limit) {
+                break;
+            }
+        }
+
+        return $alerts;
+    }
+}
+
 if (!function_exists('available_permissions')) {
     function available_permissions(): array {
         return [

@@ -88,19 +88,21 @@ $colors = [
                     <th>Category</th>
                     <th>Event</th>
                     <th>User/IP</th>
+                    <th>Priority</th>
                     <th>Details</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if(empty($logs)): ?>
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">No logs found.</td>
+                        <td colspan="6" class="text-center text-muted py-4">No logs found.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($logs as $l):
                         $style = $colors[$l['category']] ?? ['bg' => '#eee', 'text' => '#333'];
                     ?>
-                        <tr>
+                        <?php $is_high_priority = is_high_priority_log((string)$l['category'], (string)$l['event']); ?>
+                        <tr class="<?php echo $is_high_priority ? 'table-danger' : ''; ?>">
                             <td class="text-nowrap text-secondary">
                                 [<?php echo date('Y-m-d H:i:s', strtotime($l['timestamp'])); ?>]
                             </td>
@@ -111,7 +113,14 @@ $colors = [
                             </td>
                             <td><strong><?php echo htmlspecialchars($l['event']); ?></strong></td>
                             <td>
-                                <small><strong><?php echo $l['user']; ?></strong><br><?php echo $l['ip']; ?></small>
+                                <small><strong><?php echo htmlspecialchars((string)$l['user']); ?></strong><br><?php echo htmlspecialchars((string)$l['ip']); ?></small>
+                            </td>
+                            <td>
+                                <?php if ($is_high_priority): ?>
+                                    <span class="badge rounded-pill text-bg-danger">High</span>
+                                <?php else: ?>
+                                    <span class="badge rounded-pill text-bg-secondary">Normal</span>
+                                <?php endif; ?>
                             </td>
                             <td style="font-family: 'Consolas', monospace; font-size: 0.85rem; word-wrap: break-word;">
                                 <?php echo htmlspecialchars($l['details']); ?>

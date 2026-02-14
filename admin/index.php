@@ -17,14 +17,24 @@ if (is_dir($addons_path)) {
 // 1. Simple Login Check (Logic only)
 if (!isset($_SESSION['user_id'])) {
     if (isset($_POST['login'])) {
+        $submitted_user = trim((string)($_POST['user'] ?? ''));
+
         if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_login')) {
+            log_activity($db, 'SECURITY', 'Admin Login CSRF Blocked', "Username: " . ($submitted_user !== '' ? $submitted_user : '[empty]'));
             http_response_code(403);
             $error = 'Invalid request token. Please refresh and try again.';
             include 'views/login.php';
             exit;
         }
+        $users_table_exists = $db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+        if (!$users_table_exists || !$users_table_exists->fetchColumn()) {
+            $error = 'User accounts are not initialized yet. Please run the installer.';
+            include 'views/login.php';
+            exit;
+        }
+
         $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
-        $stmt->execute([$_POST['user']]);
+        $stmt->execute([$submitted_user]);
         $user = $stmt->fetch();
         
         if ($user && password_verify($_POST['pass'], $user['password'])) {
@@ -34,12 +44,14 @@ if (!isset($_SESSION['user_id'])) {
             $_SESSION['username'] = $user['username'];
             $_SESSION['display_name'] = $user['display_name'] ?? $user['username'];
             $_SESSION['permissions'] = json_decode((string)($user['permissions'] ?? '[]'), true) ?: [];
+            $_SESSION['show_dashboard_alerts'] = true;
 
             // LOG THE LOGIN
             log_activity($db, 'AUTH', 'Admin Login', "User: " . $user['username']);
             
             header("Location: index.php"); exit;
         }
+        log_activity($db, 'AUTH', 'Admin Login Failed', "Username: " . ($submitted_user !== '' ? $submitted_user : '[empty]'));
         $error = "Invalid credentials";
     }
     // Show login form if not logged in

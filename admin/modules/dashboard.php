@@ -17,6 +17,19 @@ $unique_visitors_today = $db->query("SELECT COUNT(DISTINCT visitor_id) FROM anal
 $total_page_views = $db->query("SELECT COUNT(*) FROM analytics")->fetchColumn();
 $error_count = $db->query("SELECT COUNT(*) FROM logs WHERE category = '404' AND timestamp >= date('now', '-7 days')")->fetchColumn();
 
+$show_high_priority_alerts = ($_SESSION['show_dashboard_alerts'] ?? false) === true;
+
+if (isset($_POST['dismiss_high_priority_alerts'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'dashboard_high_priority_alerts')) {
+        http_response_code(403);
+        die('Forbidden');
+    }
+    $_SESSION['show_dashboard_alerts'] = false;
+    $show_high_priority_alerts = false;
+}
+
+$recent_high_priority_logs = get_recent_high_priority_logs($db, 5, 24);
+
 /** * 2. NEW VS RETURNING LOGIC 
  * We check if a visitor_id appears on days prior to 'today'
  */
@@ -73,6 +86,29 @@ $webspace_formatted = format_size($total_webspace_bytes);
         </div>
     </div>
 </div>
+
+<?php if ($show_high_priority_alerts && !empty($recent_high_priority_logs)): ?>
+<div class="alert alert-danger border-0 shadow-sm rounded-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4" role="alert">
+    <div>
+        <div class="fw-bold mb-2"><i class="bi bi-exclamation-octagon-fill me-2"></i>High-priority alerts in the last 24 hours</div>
+        <ul class="mb-0 small ps-3">
+            <?php foreach ($recent_high_priority_logs as $alert): ?>
+                <li class="mb-1">
+                    <span class="fw-semibold"><?php echo htmlspecialchars($alert['event']); ?></span>
+                    <span class="text-dark-emphasis">(<?php echo htmlspecialchars($alert['category']); ?>)</span>
+                    <span class="text-muted">— <?php echo htmlspecialchars($alert['user'] ?: 'Anonymous'); ?> @ <?php echo date('Y-m-d H:i', strtotime($alert['timestamp'])); ?></span>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <form method="POST" class="m-0">
+        <?php echo csrf_input('dashboard_high_priority_alerts'); ?>
+        <button type="submit" name="dismiss_high_priority_alerts" class="btn btn-outline-light btn-sm rounded-pill px-3">
+            Dismiss
+        </button>
+    </form>
+</div>
+<?php endif; ?>
 
 <div class="row g-3 mb-4"> 
     <div class="col-md-3"> 
