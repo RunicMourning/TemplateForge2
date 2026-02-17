@@ -285,3 +285,42 @@ if (!function_exists('has_permission')) {
         return in_array($permission, $assigned, true);
     }
 }
+
+if (!function_exists('get_admin_theme_options')) {
+    function get_admin_theme_options(): array {
+        return [
+            'default' => [
+                'label' => 'Bootstrap Default',
+                'css' => 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
+            ],
+            'sandstone' => [
+                'label' => 'Bootswatch Sandstone',
+                'css' => 'https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/sandstone/bootstrap.min.css',
+            ],
+            'lux' => [
+                'label' => 'Bootswatch Lux',
+                'css' => 'https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/lux/bootstrap.min.css',
+            ],
+            'darkly' => [
+                'label' => 'Bootswatch Darkly',
+                'css' => 'https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css',
+            ],
+        ];
+    }
+}
+
+if (!function_exists('get_admin_theme_key')) {
+    function get_admin_theme_key(array $settings): string {
+        $themes = get_admin_theme_options();
+        $theme_key = strtolower(trim((string) ($settings['admin_theme'] ?? 'default')));
+        return array_key_exists($theme_key, $themes) ? $theme_key : 'default';
+    }
+}
+
+if (!function_exists('get_admin_theme_css_url')) {
+    function get_admin_theme_css_url(array $settings): string {
+        $themes = get_admin_theme_options();
+        $theme_key = get_admin_theme_key($settings);
+        return $themes[$theme_key]['css'];
+    }
+}
