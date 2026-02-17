@@ -45,6 +45,15 @@ $dynamic_sections = function_exists('get_registered_settings_sections')
     : [];
 
 $allowed_types = ['text', 'email', 'password', 'textarea'];
+
+$admin_theme_options = function_exists('get_admin_theme_options')
+    ? get_admin_theme_options()
+    : [
+        'default' => ['label' => 'Bootstrap Default', 'css' => 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'],
+    ];
+$current_admin_theme = function_exists('get_admin_theme_key')
+    ? get_admin_theme_key($res)
+    : 'default';
 ?>
 
 <div class="container py-4">
@@ -73,6 +82,18 @@ $allowed_types = ['text', 'email', 'password', 'textarea'];
                         <div class="col-12">
                             <label class="form-label fw-bold">Footer Text</label>
                             <input type="text" name="config[footer_text]" value="<?php echo htmlspecialchars($res['footer_text'] ?? ''); ?>" class="form-control">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Admin Theme</label>
+                            <select name="config[admin_theme]" class="form-select">
+                                <?php foreach ($admin_theme_options as $theme_key => $theme): ?>
+                                    <option value="<?php echo htmlspecialchars($theme_key); ?>" <?php echo $current_admin_theme === $theme_key ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($theme['label'] ?? ucfirst((string) $theme_key)); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text">Loaded via CDN. Changes apply across admin pages and login screen.</div>
                         </div>
 
                         <?php if (function_exists('run_hook')) run_hook('admin_settings_ui'); ?>

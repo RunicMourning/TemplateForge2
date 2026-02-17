@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMS Core | Admin Login</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?php echo htmlspecialchars(get_admin_theme_css_url($settings), ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <style>
@@ -14,18 +14,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f8f9fa;
+            background: var(--bs-body-bg);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         .login-box {
-            background: #fff;
+            background: var(--bs-body-bg);
             padding: 0;
             border-radius: 1rem;
             box-shadow: 0 20px 40px rgba(0,0,0,0.05);
             width: 100%;
             max-width: 400px;
             overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid var(--bs-border-color);
         }
         .login-header {
             padding: 2.5rem 2.5rem 1rem;
@@ -36,8 +36,8 @@
         }
         .login-footer {
             padding: 1.5rem;
-            background: #fdfdfd;
-            border-top: 1px solid #f1f1f1;
+            background: color-mix(in srgb, var(--bs-body-bg) 88%, var(--bs-body-color) 12%);
+            border-top: 1px solid var(--bs-border-color);
             text-align: center;
         }
         .gradient-bar {
@@ -47,8 +47,8 @@
         .form-control {
             padding: 0.75rem 1rem;
             border-radius: 0.75rem;
-            border: 1px solid #e0e0e0;
-            background-color: #fcfcfc;
+            border: 1px solid var(--bs-border-color);
+            background-color: var(--bs-body-bg);
         }
         .form-control:focus {
             box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);

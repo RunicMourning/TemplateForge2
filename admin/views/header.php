@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page['title'] ?? 'Admin Panel'; ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?php echo htmlspecialchars(get_admin_theme_css_url($settings), ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root { --sidebar-width: 260px; --topbar-height: 60px; }
-        body { background-color: #f8f9fa; overflow-x: hidden; }
+        body { background-color: var(--bs-body-bg); overflow-x: hidden; }
         #sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; background-color: #212529; transition: all 0.3s; }
         .nav-link { color: #adb5bd; font-weight: 500; }
         .nav-link:hover, .nav-link.active { color: #fff; background-color: rgba(255, 255, 255, 0.1); }
         .sidebar-heading { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1rem; color: #6c757d; padding: 1.5rem 1rem 0.5rem; }
         main { margin-left: var(--sidebar-width); padding-top: var(--topbar-height); min-height: 100vh; }
-        .top-bar { height: var(--topbar-height); margin-left: var(--sidebar-width); background: #fff; border-bottom: 1px solid #dee2e6; z-index: 99; }
+        .top-bar { height: var(--topbar-height); margin-left: var(--sidebar-width); background: var(--bs-body-bg); border-bottom: 1px solid var(--bs-border-color); z-index: 99; }
         
         /* Icon Colors */
         #sidebar .bi-speedometer2 { color: #0dcaf0; }
