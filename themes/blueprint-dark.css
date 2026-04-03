@@ -1,0 +1,131 @@
+/*!
+ * @tf-label:   Blueprint
+ * @tf-variant:  Dark
+ * @tf-group:    Blueprint
+ * @tf-colors:   #1a2332,#18bc9c,#3498db,#c8d8e8
+ * @tf-layout:   App Shell
+ * @tf-source:   TemplatForge
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap');
+
+/* ─── Design Tokens — Dark ─────────────────────────────────────── */
+:root {
+    --tf-bg:          #1a2332;
+    --tf-surface:     #1e2d42;
+    --tf-surface-2:   #162035;
+    --tf-border:      #2a3d56;
+    --tf-text:        #c8d8e8;
+    --tf-text-muted:  #5a7a9a;
+    --tf-accent:      #18bc9c;
+    --tf-accent-2:    #3498db;
+    --tf-accent-dark: #128f76;
+    --tf-nav-bg:      #0f1820;
+    --tf-nav-border:  #0a1018;
+    --tf-font-display: 'Lato', system-ui, sans-serif;
+    --tf-font-body:    'Lato', system-ui, sans-serif;
+    --tf-radius:       6px;
+    --tf-radius-lg:    10px;
+    --tf-shadow:       0 4px 24px rgba(0,0,0,0.4);
+    --tf-shadow-sm:    0 2px 6px rgba(0,0,0,0.3);
+}
+
+body {
+    background-color: #1a2332;
+    background-color: var(--tf-bg);
+    color: var(--tf-text);
+    --tf-focus-ring: rgba(24, 188, 156, 0.25);
+}
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="search"], input[type="url"], input[type="number"],
+textarea, select {
+    background: var(--tf-surface);
+    border-color: var(--tf-border);
+    color: var(--tf-text);
+}
+
+/* ─── Layout: App-shell ────────────────────────────────────────── */
+
+.container { max-width: 1300px; }
+
+.site-layout {
+    background: var(--tf-surface);
+    border-radius: var(--tf-radius-lg);
+    box-shadow: var(--tf-shadow);
+    overflow: hidden;
+    padding: 0;
+    gap: 0;
+}
+
+@media (min-width: 1024px) {
+    .site-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        min-height: calc(100vh - 12rem);
+    }
+    .site-main {
+        order: 2;
+        padding: 2.5rem;
+        border-left: 1px solid var(--tf-border);
+        min-height: 100%;
+    }
+    .site-aside {
+        order: 1;
+        background: var(--tf-surface-2);
+        padding: 2rem 1.5rem;
+        position: static;
+        align-self: stretch;
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 1023px) {
+    .site-main  { padding: 1.5rem; }
+    .site-aside { padding: 1.5rem; background: var(--tf-surface-2); }
+}
+
+.hero { border-bottom: 1px solid var(--tf-border); padding: 1.5rem 0 2rem; margin-bottom: 2rem; }
+.hero-title { font-size: clamp(1.6rem, 3.5vw, 2.4rem); font-weight: 700; letter-spacing: -0.02em; }
+.hero-eyebrow {
+    background: rgba(24, 188, 156, 0.15);
+    color: var(--tf-accent);
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    border: none;
+    display: inline-flex;
+    margin-bottom: 1rem;
+}
+.hero-title em { color: var(--tf-accent); }
+
+.section-label {
+    font-weight: 600; font-size: 0.75rem; letter-spacing: 0.06em;
+    color: var(--tf-text-muted);
+    background: var(--tf-surface-2);
+    border-radius: var(--tf-radius);
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--tf-border);
+    font-family: 'Lato', sans-serif;
+}
+.section-label::after { display: none; }
+
+.post-card:hover { box-shadow: var(--tf-shadow); transform: none; border-color: var(--tf-accent); }
+.post-card-accent { background: linear-gradient(to bottom, var(--tf-accent), var(--tf-accent-2)); }
+.feature-card:hover { box-shadow: var(--tf-shadow); border-color: var(--tf-accent); }
+.feature-card .card-accent { background: linear-gradient(90deg, var(--tf-accent), var(--tf-accent-2)); }
+.feature-card-icon { color: var(--tf-accent); }
+.widget-card { border-radius: var(--tf-radius); box-shadow: none; border: 1px solid var(--tf-border); background: var(--tf-surface); }
+.widget-title { font-family: 'Lato', sans-serif; font-weight: 700; font-size: 0.68rem; letter-spacing: 0.1em; }
+
+.btn { font-family: 'Lato', sans-serif; font-weight: 700; }
+.btn-primary { background: var(--tf-accent); border-color: var(--tf-accent); }
+.btn-primary:hover { background: var(--tf-accent-dark); border-color: var(--tf-accent-dark); }
+.btn-secondary { border-color: var(--tf-accent-2); color: var(--tf-accent-2); }
+.btn-secondary:hover { background: var(--tf-accent-2); color: #fff; border-color: var(--tf-accent-2); }
+
+.nav-brand { font-family: 'Lato', sans-serif; font-weight: 700; }
+.nav-links a.active { color: var(--tf-accent) !important; }

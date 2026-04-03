@@ -8,9 +8,14 @@
     <title><?php echo htmlspecialchars($settings['site_name']); ?> | <?php echo htmlspecialchars($page['title'] ?? 'Home'); ?></title>
 
     <?php
-    $active_theme = $settings['active_theme'] ?? 'broadsheet';
-    $allowed_themes = ['broadsheet', 'inkwell', 'blueprint', 'fieldnotes', 'terminal', 'magazine'];
-    if (!in_array($active_theme, $allowed_themes)) $active_theme = 'broadsheet';
+    require_once __DIR__ . '/../includes/theme-registry.php';
+    $active_theme  = $settings['active_theme'] ?? 'broadsheet-light';
+    // Migrate legacy theme slugs (no -light/-dark suffix) to light variant
+    if (!preg_match('/-(light|dark)$/', $active_theme)) {
+        $active_theme .= '-light';
+    }
+    if (!tf_is_valid_theme($active_theme)) $active_theme = 'broadsheet-light';
+    $tf_registry   = tf_get_theme_registry();
     ?>
 
     <!-- Bootstrap Icons (no Bootstrap CSS/JS) -->
@@ -92,106 +97,74 @@ if ($current_page === '' || $current_page === 'index.php') $current_page = 'home
 <!-- ── Theme Switcher Modal ──────────────────────────────────────── -->
 <div id="themeSwitcherOverlay" class="ts-overlay" aria-hidden="true">
     <div class="ts-modal" role="dialog" aria-modal="true" aria-labelledby="tsTitle">
+
         <div class="ts-header">
             <span id="tsTitle"><i class="bi bi-palette"></i> Choose a Theme</span>
             <button class="ts-close" id="tsClose" aria-label="Close">&times;</button>
         </div>
-        <p class="ts-subtitle">Theme changes take effect instantly. Layout and colors will update across all pages.</p>
-        <div class="ts-grid">
+
+        <p class="ts-subtitle">Select any theme — changes apply instantly. Add a <code>name-light.css</code> or <code>name-dark.css</code> to <code>/themes/</code> to register it automatically.</p>
+
+        <div class="ts-list">
 <?php
-$ts_themes = [
-    'broadsheet' => [
-        'label' => 'Broadsheet',
-        'source' => 'Journal',
-        'desc' => 'Editorial serif · Sidebar right',
-        'nav' => '#222222',
-        'bg'  => '#f8f9fa',
-        'accent' => '#eb6864',
-        'surface' => '#ffffff',
-    ],
-    'inkwell' => [
-        'label' => 'Inkwell',
-        'source' => 'Darkly',
-        'desc' => 'Dark editorial · Sidebar left',
-        'nav' => '#111111',
-        'bg'  => '#222222',
-        'accent' => '#00bc8c',
-        'surface' => '#303030',
-    ],
-    'blueprint' => [
-        'label' => 'Blueprint',
-        'source' => 'Flatly',
-        'desc' => 'SaaS/app shell · Panel layout',
-        'nav' => '#2c3e50',
-        'bg'  => '#ecf0f1',
-        'accent' => '#18bc9c',
-        'surface' => '#ffffff',
-    ],
-    'fieldnotes' => [
-        'label' => 'Fieldnotes',
-        'source' => 'Sandstone',
-        'desc' => 'Warm stone · Full width',
-        'nav' => '#3e3f3a',
-        'bg'  => '#f8f5f0',
-        'accent' => '#93c54b',
-        'surface' => '#ffffff',
-    ],
-    'terminal' => [
-        'label' => 'Terminal',
-        'source' => 'Cyborg',
-        'desc' => 'Hacker mono · No sidebar',
-        'nav' => '#020202',
-        'bg'  => '#060606',
-        'accent' => '#2a9fd6',
-        'surface' => '#111111',
-    ],
-    'magazine' => [
-        'label' => 'Magazine',
-        'source' => 'Vapor',
-        'desc' => 'Cyberpunk · Left rail',
-        'nav' => '#0d0020',
-        'bg'  => '#1a0933',
-        'accent' => '#ea39b8',
-        'surface' => '#2a1050',
-    ],
-];
-foreach ($ts_themes as $slug => $t):
-    $is_active = ($active_theme === $slug);
+// Group themes by group name, light before dark
+$ts_groups = [];
+foreach ($tf_registry as $slug => $t) {
+    $ts_groups[$t['group']][$t['variant']] = array_merge(['slug' => $slug], $t);
+}
+ksort($ts_groups);
+
+foreach ($ts_groups as $group_name => $variants):
+    // Show light first, then dark
+    $ordered = [];
+    if (isset($variants['Light'])) $ordered[] = $variants['Light'];
+    if (isset($variants['Dark']))  $ordered[] = $variants['Dark'];
+
+    foreach ($ordered as $t):
+        $slug      = $t['slug'];
+        $is_active = ($active_theme === $slug);
+        $colors    = $t['colors'];
+        // Build CSS gradient stops from the 4 color values
+        $c1 = $colors[0] ?? '#888';
+        $c2 = $colors[1] ?? '#555';
+        $c3 = $colors[2] ?? '#333';
+        $c4 = $colors[3] ?? '#111';
+        $gradient = "linear-gradient(135deg, {$c1} 0%, {$c1} 30%, {$c2} 30%, {$c2} 55%, {$c3} 55%, {$c3} 78%, {$c4} 78%)";
+        $variant_lower = strtolower($t['variant']);
 ?>
-            <button class="ts-card <?php echo $is_active ? 'ts-active' : ''; ?>"
-                    data-theme="<?php echo $slug; ?>"
+            <button class="ts-row <?php echo $is_active ? 'ts-active' : ''; ?>"
+                    data-theme="<?php echo htmlspecialchars($slug); ?>"
                     aria-pressed="<?php echo $is_active ? 'true' : 'false'; ?>"
-                    title="<?php echo htmlspecialchars($t['label']); ?>">
-                <div class="ts-preview" style="background:<?php echo $t['bg']; ?>">
-                    <div class="ts-prev-nav" style="background:<?php echo $t['nav']; ?>">
-                        <div class="ts-prev-dot" style="background:<?php echo $t['accent']; ?>"></div>
-                        <div class="ts-prev-dot" style="background:<?php echo $t['accent']; ?>; opacity:.5;"></div>
-                        <div class="ts-prev-dot" style="background:<?php echo $t['accent']; ?>; opacity:.3;"></div>
-                    </div>
-                    <div class="ts-prev-body">
-                        <div class="ts-prev-sidebar" style="background:<?php echo $t['surface']; ?>; border-right:1px solid rgba(0,0,0,0.08);"></div>
-                        <div class="ts-prev-content" style="background:<?php echo $t['bg']; ?>">
-                            <div class="ts-prev-line ts-prev-h" style="background:<?php echo $t['accent']; ?>"></div>
-                            <div class="ts-prev-line" style="background:<?php echo $t['accent']; ?>; opacity:.3;"></div>
-                            <div class="ts-prev-line" style="background:<?php echo $t['accent']; ?>; opacity:.2; width:70%;"></div>
-                            <div class="ts-prev-card" style="background:<?php echo $t['surface']; ?>; border:1px solid rgba(128,128,128,0.15);">
-                                <div class="ts-prev-line" style="background:<?php echo $t['accent']; ?>; opacity:.5; height:2px; margin-bottom:4px;"></div>
-                                <div class="ts-prev-line" style="background:<?php echo $t['accent']; ?>; opacity:.2;"></div>
-                            </div>
-                        </div>
-                    </div>
+                    title="Apply <?php echo htmlspecialchars($t['label'] . ' ' . $t['variant']); ?>">
+
+                <!-- CSS gradient color icon -->
+                <div class="ts-icon" style="background: <?php echo $gradient; ?>;" aria-hidden="true">
                     <?php if ($is_active): ?>
-                    <div class="ts-active-badge"><i class="bi bi-check-lg"></i></div>
+                    <div class="ts-icon-check"><i class="bi bi-check-lg"></i></div>
                     <?php endif; ?>
                 </div>
-                <div class="ts-card-info">
-                    <strong><?php echo htmlspecialchars($t['label']); ?></strong>
-                    <span class="ts-source">Based on <?php echo htmlspecialchars($t['source']); ?></span>
-                    <span class="ts-desc"><?php echo htmlspecialchars($t['desc']); ?></span>
+
+                <div class="ts-info">
+                    <div class="ts-name">
+                        <?php echo htmlspecialchars($t['label']); ?>
+                        <span class="ts-variant ts-variant--<?php echo $variant_lower; ?>"><?php echo htmlspecialchars($t['variant']); ?></span>
+                    </div>
+                    <div class="ts-meta">
+                        <span class="ts-layout"><i class="bi bi-layout-sidebar"></i> <?php echo htmlspecialchars($t['layout']); ?></span>
+                    </div>
                 </div>
+
+                <?php if ($is_active): ?>
+                <div class="ts-active-mark" aria-label="Currently active"></div>
+                <?php endif; ?>
+
             </button>
-<?php endforeach; ?>
+<?php
+    endforeach;
+endforeach;
+?>
         </div>
+
         <div class="ts-footer">
             <span id="tsStatus" class="ts-status"></span>
         </div>
@@ -222,40 +195,44 @@ foreach ($ts_themes as $slug => $t):
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.65);
+    background: rgba(0,0,0,0.6);
     z-index: 9999;
     align-items: center;
     justify-content: center;
     padding: 1rem;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
 }
 .ts-overlay.ts-open { display: flex; }
 
 .ts-modal {
     background: #fff;
-    color: #1a1a1a;
+    color: #111;
     border-radius: 12px;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.25);
     width: 100%;
-    max-width: 680px;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: ts-slide-in 0.2s ease;
+    max-width: 620px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: ts-in 0.18s ease;
 }
-@keyframes ts-slide-in {
-    from { opacity: 0; transform: translateY(-12px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes ts-in {
+    from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
 }
 
+/* ── Header ─────────────────────────────────────────────────────── */
 .ts-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 1.5rem 0.75rem;
-    border-bottom: 1px solid #e5e5e5;
-    font-size: 1rem;
+    padding: 1.1rem 1.4rem 0.9rem;
+    border-bottom: 1px solid #e8e8e8;
+    font-size: 0.95rem;
     font-weight: 700;
     gap: 1rem;
+    flex-shrink: 0;
 }
 .ts-header i { color: #7c3aed; margin-right: 0.4rem; }
 
@@ -266,150 +243,169 @@ foreach ($ts_themes as $slug => $t):
     cursor: pointer;
     color: #999;
     line-height: 1;
-    padding: 0 0.25rem;
+    padding: 0 0.2rem;
     transition: color 0.15s;
     flex-shrink: 0;
 }
 .ts-close:hover { color: #111; }
 
 .ts-subtitle {
-    padding: 0.75rem 1.5rem 0;
-    font-size: 0.82rem;
-    color: #666;
+    padding: 0.65rem 1.4rem;
+    font-size: 0.78rem;
+    color: #777;
     margin: 0;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+    line-height: 1.5;
+}
+.ts-subtitle code {
+    background: #f0f0f0;
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: #555;
+    border: none;
 }
 
-/* ── Theme grid ─────────────────────────────────────────────────── */
-.ts-grid {
+/* ── Theme list — 2-column grid ─────────────────────────────────── */
+.ts-list {
+    overflow-y: auto;
+    padding: 0.75rem 1rem;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
-    padding: 1.25rem 1.5rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    flex: 1;
 }
 
-.ts-card {
-    background: none;
-    border: 2px solid #e5e5e5;
-    border-radius: 10px;
-    padding: 0;
-    cursor: pointer;
-    text-align: left;
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-    overflow: hidden;
-    font-family: inherit;
-}
-.ts-card:hover {
-    border-color: #7c3aed;
-    box-shadow: 0 4px 16px rgba(124,58,237,0.15);
-    transform: translateY(-2px);
-}
-.ts-card.ts-active {
-    border-color: #7c3aed;
-    box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+@media (max-width: 480px) {
+    .ts-list { grid-template-columns: 1fr; }
 }
 
-/* ── Preview thumbnail ──────────────────────────────────────────── */
-.ts-preview {
-    height: 100px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-.ts-prev-nav {
-    height: 14px;
+/* ── Row button ─────────────────────────────────────────────────── */
+.ts-row {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 0 6px;
-    flex-shrink: 0;
+    gap: 0.75rem;
+    background: none;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: border-color 0.13s, background 0.13s, transform 0.13s;
+    position: relative;
 }
-.ts-prev-dot {
-    width: 20px;
-    height: 4px;
-    border-radius: 2px;
+.ts-row:hover {
+    border-color: #7c3aed;
+    background: #faf8ff;
+    transform: translateY(-1px);
 }
-.ts-prev-body {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-}
-.ts-prev-sidebar {
-    width: 28%;
-    flex-shrink: 0;
-}
-.ts-prev-content {
-    flex: 1;
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.ts-prev-line {
-    height: 5px;
-    border-radius: 2px;
-    width: 100%;
-}
-.ts-prev-h { height: 8px; margin-bottom: 2px; }
-.ts-prev-card {
-    margin-top: 4px;
-    border-radius: 3px;
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.ts-row.ts-active {
+    border-color: #7c3aed;
+    background: #f5f0ff;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
 }
 
-.ts-active-badge {
+/* ── Color icon — 75×75 gradient swatch ─────────────────────────── */
+.ts-icon {
+    width: 75px;
+    height: 75px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+.ts-icon-check {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    background: #7c3aed;
-    color: #fff;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    font-size: 1.6rem;
+    backdrop-filter: blur(1px);
 }
 
-/* ── Card info ──────────────────────────────────────────────────── */
-.ts-card-info {
-    padding: 0.6rem 0.75rem 0.75rem;
+/* ── Theme info ──────────────────────────────────────────────────── */
+.ts-info {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    border-top: 1px solid rgba(0,0,0,0.06);
+    gap: 0.35rem;
 }
-.ts-card-info strong {
-    font-size: 0.85rem;
-    color: #111;
+
+.ts-name {
+    font-size: 0.88rem;
     font-weight: 700;
+    color: #111;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
 }
-.ts-source {
-    font-size: 0.7rem;
-    color: #7c3aed;
+
+.ts-variant {
+    font-size: 0.65rem;
     font-weight: 600;
+    padding: 0.1em 0.5em;
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
-.ts-desc {
-    font-size: 0.7rem;
+.ts-variant--light {
+    background: #fff8e1;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+.ts-variant--dark {
+    background: #1e1b4b;
+    color: #a5b4fc;
+    border: 1px solid #312e81;
+}
+
+.ts-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.ts-layout, .ts-source {
+    font-size: 0.72rem;
     color: #888;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ts-layout i, .ts-source i { font-size: 0.7rem; opacity: 0.7; flex-shrink: 0; }
+
+/* Active indicator dot (top-right corner) */
+.ts-active-mark {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7c3aed;
 }
 
 /* ── Footer / status ────────────────────────────────────────────── */
 .ts-footer {
-    padding: 0.75rem 1.5rem 1.25rem;
-    border-top: 1px solid #e5e5e5;
-    min-height: 2.5rem;
+    padding: 0.65rem 1.4rem;
+    border-top: 1px solid #f0f0f0;
+    min-height: 2.4rem;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
-.ts-status {
-    font-size: 0.82rem;
-    color: #666;
-}
+.ts-status { font-size: 0.8rem; color: #777; }
 .ts-status.ts-saving  { color: #7c3aed; }
 .ts-status.ts-success { color: #16a34a; }
 .ts-status.ts-error   { color: #dc2626; }
@@ -438,72 +434,71 @@ foreach ($ts_themes as $slug => $t):
     if (openBtn)  openBtn.addEventListener('click', openModal);
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
-    // Close on overlay backdrop click
     overlay.addEventListener('click', function (e) {
         if (e.target === overlay) closeModal();
     });
 
-    // Close on Escape
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && overlay.classList.contains('ts-open')) closeModal();
     });
 
-    // Theme card clicks
-    document.querySelectorAll('.ts-card').forEach(function (card) {
-        card.addEventListener('click', function () {
-            var theme = card.dataset.theme;
+    document.querySelectorAll('.ts-row').forEach(function (row) {
+        row.addEventListener('click', function () {
+            var theme = row.dataset.theme;
             if (!theme) return;
 
-            // Optimistic UI — swap stylesheet immediately
-            if (themeLink) {
-                themeLink.href = '/themes/' + theme + '.css';
-            }
+            // Swap stylesheet immediately (optimistic)
+            if (themeLink) themeLink.href = '/themes/' + theme + '.css';
 
-            // Mark active card
-            document.querySelectorAll('.ts-card').forEach(function (c) {
-                c.classList.remove('ts-active');
-                c.setAttribute('aria-pressed', 'false');
-                var badge = c.querySelector('.ts-active-badge');
-                if (badge) badge.remove();
+            // Update active states
+            document.querySelectorAll('.ts-row').forEach(function (r) {
+                r.classList.remove('ts-active');
+                r.setAttribute('aria-pressed', 'false');
+                var chk = r.querySelector('.ts-icon-check');
+                if (chk) chk.remove();
+                var dot = r.querySelector('.ts-active-mark');
+                if (dot) dot.remove();
             });
-            card.classList.add('ts-active');
-            card.setAttribute('aria-pressed', 'true');
-            if (!card.querySelector('.ts-active-badge')) {
-                var badge = document.createElement('div');
-                badge.className = 'ts-active-badge';
-                badge.innerHTML = '<i class="bi bi-check-lg"></i>';
-                card.querySelector('.ts-preview').appendChild(badge);
+
+            row.classList.add('ts-active');
+            row.setAttribute('aria-pressed', 'true');
+
+            // Add check overlay to icon
+            var icon = row.querySelector('.ts-icon');
+            if (icon && !icon.querySelector('.ts-icon-check')) {
+                var chk = document.createElement('div');
+                chk.className = 'ts-icon-check';
+                chk.innerHTML = '<i class="bi bi-check-lg"></i>';
+                icon.appendChild(chk);
+            }
+            // Add active dot
+            if (!row.querySelector('.ts-active-mark')) {
+                var dot = document.createElement('div');
+                dot.className = 'ts-active-mark';
+                row.appendChild(dot);
             }
 
-            // Status
-            status.textContent = 'Applying theme\u2026';
+            status.textContent = 'Applying\u2026';
             status.className = 'ts-status ts-saving';
 
-            // Persist via fetch
             var fd = new FormData();
             fd.append('theme', theme);
             fetch('/theme-switcher.php', { method: 'POST', body: fd })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (data.success) {
-                        status.textContent = '\u2713 Theme applied successfully.';
+                        status.textContent = '\u2713 Applied.';
                         status.className = 'ts-status ts-success';
                     } else {
-                        status.textContent = '\u26a0 Could not save theme preference.';
+                        status.textContent = '\u26a0 Could not save preference.';
                         status.className = 'ts-status ts-error';
                     }
-                    setTimeout(function () {
-                        status.textContent = '';
-                        status.className = 'ts-status';
-                    }, 3000);
+                    setTimeout(function () { status.textContent = ''; status.className = 'ts-status'; }, 3000);
                 })
                 .catch(function () {
-                    status.textContent = '\u26a0 Network error — visual theme applied but not saved.';
+                    status.textContent = '\u26a0 Network error — theme applied visually but not saved.';
                     status.className = 'ts-status ts-error';
-                    setTimeout(function () {
-                        status.textContent = '';
-                        status.className = 'ts-status';
-                    }, 4000);
+                    setTimeout(function () { status.textContent = ''; status.className = 'ts-status'; }, 4000);
                 });
         });
     });

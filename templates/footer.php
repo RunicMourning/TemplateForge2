@@ -13,7 +13,7 @@
                     <?php echo htmlspecialchars($settings['site_name']); ?>
                 </a>
                 <p class="text-small" style="color: rgba(255,255,255,0.45); max-width: 280px; line-height: 1.6; margin-bottom: 0;">
-                    <?php echo htmlspecialchars($settings['footer_text'] ?? 'Delivering strategic insights and industry updates.'); ?>
+                    <?php echo $settings['footer_text'] ?? 'Delivering strategic insights and industry updates.'; ?>
                 </p>
                 <div class="footer-social">
                     <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>

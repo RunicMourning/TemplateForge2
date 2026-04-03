@@ -141,9 +141,52 @@ if ($installer_locked) {
         $stmt->execute(['Privacy Policy', 'privacy', '<h2>Privacy Policy</h2><p>Our commitment to your privacy. This page is automatically enhanced by active addons. You shouldn\'t see this because it loads a PHP file instead.</p>']);
         $stmt->execute(['Page Not Found', '404', '<h2>Oops!</h2><p>The page you requested could not be found.</p>']);
 
-        // Initial Blog Post
-        $db->prepare("INSERT INTO posts (title, slug, category, content, excerpt, author) VALUES (?,?,?,?,?,?)")
-           ->execute(['First Post', 'hello-world', 'General', 'Welcome to your blog.', 'Initial post...', $user]);
+        // Initial Blog Posts
+        $post1_content = '<p>Well, here we are. The site is live, the database is humming, and this is the first post.</p>
+
+<p>TemplatForge2 is up and running &mdash; a lightweight, fast CMS built on PHP and SQLite with no dependencies, no bloat, and no monthly fees. Just files, a database, and a good cup of coffee.</p>
+
+<p>From here you can write posts, manage pages, switch themes, build out a wiki, and make this site your own. The admin panel is at <strong>/admin</strong> whenever you need it.</p>
+
+<p>This is your blank page. Fill it with something worth reading.</p>';
+
+        $post1_excerpt = 'The site is live. TemplatForge2 is up and running &mdash; lightweight, fast, and ready to be made your own.';
+
+        $post2_content = '<p>Welcome to TemplatForge2. This post will walk you through the basics so you can hit the ground running.</p>
+
+<h2>Writing Posts</h2>
+<p>Head to the <strong>Blog</strong> section in the admin sidebar to create, edit, and manage posts. Each post has a title, slug, category, excerpt, and main content. The slug is used in the URL, so keep it short and descriptive.</p>
+
+<h2>Managing Pages</h2>
+<p>Static pages like About, Contact, and Privacy live under <strong>Pages</strong> in the admin. Each page can have a custom PHP template file in <code>/templates/</code> &mdash; for example, <code>page-contact.php</code> loads automatically for the contact page.</p>
+
+<h2>Changing the Theme</h2>
+<p>Click the palette icon in the top navigation bar to open the theme switcher. Choose from any of the available light and dark themes &mdash; changes apply instantly without a page reload. You can also manage themes from <strong>Settings &rarr; Appearance</strong> in the admin.</p>
+
+<h2>Adding Themes</h2>
+<p>TemplatForge2 uses a CSS Zen Garden approach &mdash; the HTML never changes, only the stylesheet does. To add a new theme, create a file named <code>mytheme-light.css</code> or <code>mytheme-dark.css</code> in the <code>/themes/</code> directory with the required metadata header and it will appear in the theme switcher automatically.</p>
+
+<h2>Navigation</h2>
+<p>Edit the main navigation links under <strong>Settings &rarr; Navigation</strong>. You can add, remove, and reorder links to suit your site structure.</p>
+
+<h2>Addons</h2>
+<p>Drop any <code>.php</code> file into the <code>/addons/</code> directory and it loads automatically on every page. Addons can register hooks, add settings sections, inject content into the nav or footer, and more. The hook system is your extension point for anything the core does not do out of the box.</p>
+
+<h2>Settings</h2>
+<p>Global configuration lives under <strong>Settings</strong> in the admin sidebar &mdash; site name, footer text, theme, and anything registered by active addons.</p>
+
+<h2>The Wiki</h2>
+<p>TemplatForge2 includes a built-in wiki for building a knowledge base, lore bible, or documentation. Add entries under <strong>Wiki</strong> in the admin, organise them by category, and interlink them using <code>[[Entry Title]]</code> syntax in your content. Entries can be marked as spoilers and hidden until you choose to reveal them.</p>
+
+<p>That covers the essentials. Everything else you will find by exploring the admin panel. If something is not clear, the answer is usually in the template files &mdash; they are plain PHP, fully readable, and yours to modify.</p>
+
+<p>Good luck. Build something good.</p>';
+
+        $post2_excerpt = 'A quick-start guide covering posts, pages, themes, navigation, addons, settings, and the wiki &mdash; everything you need to get up and running.';
+
+        $insert_post = $db->prepare("INSERT INTO posts (title, slug, category, content, excerpt, status, author) VALUES (?,?,?,?,?,?,?)");
+        $insert_post->execute(['Hello World', 'hello-world', 'General', $post1_content, $post1_excerpt, 'published', $user]);
+        $insert_post->execute(['Getting Started with TemplatForge2', 'getting-started', 'General', $post2_content, $post2_excerpt, 'published', $user]);
 
         if (@file_put_contents($lock_file, "Installed on " . date('c') . PHP_EOL . "IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown') . PHP_EOL) === false) {
             throw new RuntimeException('Unable to create installer lock file at admin/lock.');

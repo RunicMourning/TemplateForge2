@@ -668,3 +668,17 @@ hr { border: none; border-top: 1px solid var(--a-border); margin: 1.25rem 0; }
 /* animate-pulse status dot */
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 .pulse { animation: pulse 2s infinite ease-in-out; }
+
+/* Settings sub-section label in sidebar */
+.sidebar-subsection {
+    margin-left: auto;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--a-accent);
+    color: #fff;
+    padding: 0.1em 0.45em;
+    border-radius: 100px;
+    opacity: 0.85;
+}

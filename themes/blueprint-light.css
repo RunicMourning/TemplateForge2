@@ -1,0 +1,64 @@
+/*!
+ * @tf-label:   Blueprint
+ * @tf-variant:  Light
+ * @tf-group:    Blueprint
+ * @tf-colors:   #ecf0f1,#18bc9c,#3498db,#2c3e50
+ * @tf-layout:   App Shell
+ * @tf-source:   TemplatForge
+ */
+
+/*
+ * TemplatForge Theme: Blueprint
+ *   Primary: #2c3e50 (dark navy)  Success: #18bc9c (teal)
+ *   Info: #3498db (cyan)  BG: #ecf0f1  Text: #212529
+ * Layout: App-shell — sidebar LEFT as panel
+ * Fonts: Lato + system-ui
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap');
+
+/* ─── Design Tokens (Flatly palette) ──────────────────────────── */
+:root {
+    --tf-bg:          #ecf0f1;
+    --tf-surface:     #ffffff;
+    --tf-surface-2:   #f8f9fa;
+    --tf-border:      #ced4da;
+    --tf-text:        #212529;
+    --tf-text-muted:  #7b8a8b;
+    --tf-accent:      #18bc9c;
+    --tf-accent-2:    #3498db;
+    --tf-accent-dark: #128f76;
+    --tf-nav-bg:      #2c3e50;
+    --tf-nav-border:  #1a252f;
+    --tf-font-display: 'Lato', system-ui, sans-serif;
+    --tf-font-body:    'Lato', system-ui, sans-serif;
+    --tf-radius:       6px;
+    --tf-radius-lg:    10px;
+    --tf-shadow:       0 4px 24px rgba(0,0,0,0.07);
+    --tf-shadow-sm:    0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* ─── Layout: App-shell, sidebar LEFT panel ────────────────────── */
+
+.container { max-width: 1300px; }
+
+.site-layout {
+    background: var(--tf-surface);
+    border-radius: var(--tf-radius-lg);
+    box-shadow: var(--tf-shadow);
+    overflow: hidden;
+    padding: 0;
+    gap: 0;
+}
+
+@media (min-width: 1024px) {
+    .site-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        min-height: calc(100vh - 12rem);
+    }
+    .site-main {
+        order: 2;
+        padding: 2.5rem;
+        border-left: 1px solid var(--tf-border);
+        min-height: 100

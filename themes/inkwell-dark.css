@@ -1,0 +1,115 @@
+/*!
+ * @tf-label:   Inkwell
+ * @tf-variant:  Dark
+ * @tf-group:    Inkwell
+ * @tf-colors:   #111111,#00bc8c,#375a7f,#e0e0e0
+ * @tf-layout:   Sidebar Left
+ * @tf-source:   TemplatForge
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Merriweather:ital,wght@0,300;0,400;1,300;1,400&display=swap');
+
+/* ─── Design Tokens — Extra Dark ───────────────────────────────── */
+:root {
+    --tf-bg:          #111111;
+    --tf-surface:     #1c1c1c;
+    --tf-surface-2:   #282828;
+    --tf-border:      #333333;
+    --tf-text:        #e0e0e0;
+    --tf-text-muted:  #777777;
+    --tf-accent:      #00bc8c;
+    --tf-accent-2:    #375a7f;
+    --tf-accent-dark: #009970;
+    --tf-nav-bg:      #080808;
+    --tf-nav-border:  #000000;
+    --tf-font-display: 'Lato', system-ui, sans-serif;
+    --tf-font-body:    'Merriweather', Georgia, serif;
+    --tf-radius:       4px;
+    --tf-radius-lg:    6px;
+    --tf-shadow:       0 4px 24px rgba(0,0,0,0.7);
+    --tf-shadow-sm:    0 2px 8px rgba(0,0,0,0.5);
+}
+
+body {
+    background-color: #111111;
+    background-color: var(--tf-bg);
+    color: var(--tf-text);
+    line-height: 1.85;
+    --tf-focus-ring: rgba(0, 188, 140, 0.25);
+}
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="search"], input[type="url"], input[type="number"],
+textarea, select {
+    background: var(--tf-surface);
+    border-color: var(--tf-border);
+    color: var(--tf-text);
+}
+
+/* ─── Layout: Sidebar LEFT ─────────────────────────────────────── */
+
+.container { max-width: 1000px; }
+
+@media (min-width: 1024px) {
+    .site-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 3rem;
+        align-items: start;
+    }
+    .site-main  { order: 2; }
+    .site-aside {
+        order: 1;
+        position: sticky;
+        top: 5.5rem;
+        align-self: start;
+        max-height: calc(100vh - 6rem);
+        overflow-y: auto;
+        z-index: 1;
+    }
+}
+
+.hero {
+    border-bottom: 1px solid var(--tf-border);
+    border-left: 4px solid var(--tf-accent);
+    padding-left: 1.5rem;
+    padding-bottom: 2rem;
+    margin-bottom: 2.5rem;
+    box-sizing: border-box;
+}
+.hero-eyebrow { color: var(--tf-accent); letter-spacing: 0.15em; }
+.hero-title { font-family: 'Lato', sans-serif; font-size: clamp(1.9rem, 4.5vw, 3.2rem); font-weight: 700; }
+.hero-title em { color: var(--tf-accent); }
+
+.section-label { flex-direction: row-reverse; text-align: right; }
+.section-label::after { order: -1; max-width: 60px; }
+
+.post-card { border-color: var(--tf-border); background: var(--tf-surface); }
+.post-card:hover { border-color: var(--tf-accent); background: var(--tf-surface-2); }
+.post-card-accent { background: linear-gradient(to bottom, var(--tf-accent), var(--tf-accent-2)); }
+
+.feature-card { background: var(--tf-surface); border-color: var(--tf-border); }
+.feature-card:hover { border-color: var(--tf-accent); }
+.feature-card-icon { color: var(--tf-accent); border-color: var(--tf-border); background: var(--tf-surface-2); }
+
+.widget-card {
+    border-left: 3px solid var(--tf-accent);
+    border-top: none; border-right: none; border-bottom: none;
+    border-radius: 0; background: transparent; padding-left: 1rem; box-shadow: none;
+}
+.widget-card .card-accent { display: none; }
+.widget-title { font-family: 'Lato', sans-serif; letter-spacing: 0.15em; font-size: 0.62rem; }
+
+.nav-brand { font-family: 'Lato', sans-serif; font-weight: 700; }
+.nav-links a.active { color: var(--tf-accent); }
+
+blockquote {
+    border-left-color: var(--tf-accent);
+    background: rgba(0, 188, 140, 0.06);
+    color: var(--tf-text-muted);
+    border-radius: 0 var(--tf-radius) var(--tf-radius) 0;
+}
+
+.btn { border-radius: 100px; font-family: 'Lato', sans-serif; }
+.btn-primary { background: var(--tf-accent); border-color: var(--tf-accent); }
+.btn-primary:hover { background: var(--tf-accent-dark); border-color: var(--tf-accent-dark); }

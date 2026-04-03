@@ -30,9 +30,9 @@
 
     $categories = [
         'Overview'      => ['dashboard', 'analytics'],
-        'Content'       => ['pages', 'blog', 'categories'],
-        'Configuration' => ['navigation', 'settings'],
-        'System'        => ['users', 'logs'],
+        'Content'       => ['pages', 'blog'],
+        'Configuration' => ['settings'],
+        'System'        => ['logs'],
     ];
 
     $categorized = array_merge(...array_values($categories));
@@ -52,6 +52,7 @@
     ];
 
     $current_view = $_GET['view'] ?? 'dashboard';
+    $current_section = $_GET['section'] ?? '';
 
     echo '<div class="sidebar-nav">';
     foreach ($categories as $group => $slugs):
@@ -61,9 +62,26 @@
         foreach ($existing as $slug):
             $active = ($current_view === $slug) ? 'active' : '';
             $icon   = $icons[$slug] ?? 'bi-puzzle';
+            $label  = ucfirst($slug);
+            // Settings shows sub-section hint
+            $suffix = '';
+            if ($slug === 'settings' && $current_view === 'settings' && $current_section) {
+                $section_labels = [
+                    'site'       => 'Site',
+                    'appearance' => 'Appearance',
+                    'navigation' => 'Navigation',
+                    'footer'     => 'Footer',
+                    'podcast'    => 'Podcast',
+                    'addons'     => 'Addons',
+                    'users'      => 'Users',
+                ];
+                $suffix = isset($section_labels[$current_section])
+                    ? ' <span class="sidebar-subsection">' . $section_labels[$current_section] . '</span>'
+                    : '';
+            }
             echo '<a href="index.php?view=' . $slug . '" class="' . $active . '">'
                . '<i class="bi ' . $icon . '"></i>'
-               . ucfirst($slug)
+               . $label . $suffix
                . '</a>';
         endforeach;
     endforeach;
@@ -87,7 +105,7 @@
             <span><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></span>
             <i class="bi bi-chevron-down" style="font-size:0.7rem; color:var(--a-text-muted);"></i>
             <div class="topbar-dropdown" id="userDropdown">
-                <a href="index.php?view=users"><i class="bi bi-gear"></i> Security Settings</a>
+                <a href="index.php?view=settings&section=users"><i class="bi bi-gear"></i> Security Settings</a>
                 <div class="divider"></div>
                 <a href="logout.php" class="danger"><i class="bi bi-box-arrow-right"></i> Log out</a>
             </div>

@@ -50,9 +50,9 @@ $allowed_views = [
     'dashboard',
     'pages',
     'blog',
-    'users',
     'settings',
-    'navigation',
+    'navigation', // redirects to settings/navigation
+    'users',      // redirects to settings/users
     'logs',
     'analytics'
 ];

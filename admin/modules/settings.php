@@ -1,233 +1,203 @@
 <?php
-$msg = "";
+/**
+ * Settings — Sub-page Router
+ * Dispatches to admin/modules/settings/*.php
+ * Addons register sub-pages via: add_hook('settings_sections', function(&$sections){ ... });
+ */
 
-// Handle Settings Update
-if (isset($_POST['update_settings'])) {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_settings_update')) { http_response_code(403); die('Forbidden'); }
-    foreach (($_POST['config'] ?? []) as $key => $value) {
-        $stmt = $db->prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
-        $stmt->execute([$key, $value]);
-    }
-    log_activity($db, 'SETTINGS', 'Configuration Updated', "Site settings modified");
-    $msg = "<div class='alert alert-success'><i class='bi bi-check-all'></i> Site settings updated successfully.</div>";
-}
-
-// Handle Theme Update
-if (isset($_POST['update_theme'])) {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_settings_theme')) { http_response_code(403); die('Forbidden'); }
-    $allowed_themes = ['broadsheet', 'inkwell', 'blueprint', 'fieldnotes', 'terminal', 'magazine'];
-    $theme = $_POST['active_theme'] ?? 'broadsheet';
-    if (in_array($theme, $allowed_themes)) {
-        $stmt = $db->prepare("INSERT INTO settings (key, value) VALUES ('active_theme', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
-        $stmt->execute([$theme]);
-        log_activity($db, 'SETTINGS', 'Theme Changed', "Theme set to: $theme");
-        $msg = "<div class='alert alert-success'><i class='bi bi-palette'></i> Theme updated to <strong>" . htmlspecialchars(ucfirst($theme)) . "</strong>.</div>";
-    }
-}
-
-// Handle Category Addition
-if (isset($_POST['add_category'])) {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_settings_add_category')) { http_response_code(403); die('Forbidden'); }
-    $cat = trim($_POST['new_category']);
-    if (!empty($cat)) {
-        try {
-            $stmt = $db->prepare("INSERT INTO categories (name) VALUES (?)");
-            $stmt->execute([$cat]);
-            log_activity($db, 'CRUD', 'Category Created', $cat);
-            $msg = "<div class='alert alert-success'><i class='bi bi-tag'></i> Category <strong>" . htmlspecialchars($cat) . "</strong> added.</div>";
-        } catch (Exception $e) {
-            $msg = "<div class='alert alert-danger'><i class='bi bi-exclamation-triangle'></i> Category already exists.</div>";
-        }
-    }
-}
-
-// Handle Category Deletion
-if (isset($_POST['delete_cat'])) {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_settings_delete_category')) { http_response_code(403); die('Forbidden'); }
-    $stmt = $db->prepare("DELETE FROM categories WHERE id = ?");
-    $stmt->execute([(int)($_POST['delete_cat'] ?? 0)]);
-    $msg = "<div class='alert alert-warning'><i class='bi bi-trash'></i> Category removed.</div>";
-}
-
-// Fetch data
-$res           = $db->query("SELECT * FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
-$categories    = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll();
-$active_theme  = $res['active_theme'] ?? 'broadsheet';
-$dynamic_sections = function_exists('get_registered_settings_sections') ? get_registered_settings_sections() : [];
-$allowed_types = ['text', 'email', 'password', 'textarea'];
-
-$themes = [
-    'broadsheet' => ['label' => 'Broadsheet', 'desc' => 'Journal palette — sidebar right'],
-    'inkwell'    => ['label' => 'Inkwell',    'desc' => 'Darkly palette — sidebar left'],
-    'blueprint'  => ['label' => 'Blueprint',  'desc' => 'Flatly palette — app shell panel'],
-    'fieldnotes' => ['label' => 'Fieldnotes', 'desc' => 'Sandstone palette — full-width'],
-    'terminal'   => ['label' => 'Terminal',   'desc' => 'Cyborg palette — no sidebar'],
-    'magazine'   => ['label' => 'Magazine',   'desc' => 'Vapor palette — narrow left rail'],
+// ── Core sub-pages ───────────────────────────────────────────────
+$core_sections = [
+    'site' => [
+        'label' => 'Site Settings',
+        'icon'  => 'bi-sliders',
+        'file'  => __DIR__ . '/settings/site.php',
+    ],
+    'appearance' => [
+        'label' => 'Appearance',
+        'icon'  => 'bi-palette',
+        'file'  => __DIR__ . '/settings/appearance.php',
+    ],
+    'navigation' => [
+        'label' => 'Navigation',
+        'icon'  => 'bi-list-ul',
+        'file'  => __DIR__ . '/settings/navigation.php',
+    ],
+    'footer' => [
+        'label' => 'Footer',
+        'icon'  => 'bi-layout-sidebar-reverse',
+        'file'  => __DIR__ . '/settings/footer.php',
+    ],
+    'podcast' => [
+        'label' => 'Podcast',
+        'icon'  => 'bi-mic',
+        'file'  => __DIR__ . '/settings/podcast.php',
+    ],
+    'addons' => [
+        'label' => 'Addons',
+        'icon'  => 'bi-puzzle',
+        'file'  => __DIR__ . '/settings/addons.php',
+    ],
+    'users' => [
+        'label' => 'Users',
+        'icon'  => 'bi-people',
+        'file'  => __DIR__ . '/settings/users.php',
+    ],
 ];
+
+// ── Addon-registered sub-pages ───────────────────────────────────
+$addon_sections = [];
+if (function_exists('run_hook')) {
+    run_hook('settings_sections', $addon_sections);
+}
+
+$all_sections = array_merge($core_sections, $addon_sections);
+
+// ── Resolve active section ───────────────────────────────────────
+$section = $_GET['section'] ?? 'site';
+$section = preg_replace('/[^a-z0-9_\-]/', '', $section);
+if (!isset($all_sections[$section])) $section = 'site';
+
+$active_file = $all_sections[$section]['file'];
 ?>
+<div class="settings-layout">
 
-<div class="page-title-bar">
-    <div>
-        <div class="page-title">System Settings</div>
-        <div class="page-subtitle">Configure site options, appearance, and categories</div>
-    </div>
-    <a href="index.php?view=users" class="btn btn-outline btn-sm">
-        <i class="bi bi-people"></i> Manage Users
-    </a>
-</div>
-
-<?php echo $msg; ?>
-
-<!-- Theme Selector -->
-<div class="a-card mb-3">
-    <div class="a-card-header">
-        <div class="a-card-title"><i class="bi bi-palette" style="color: var(--a-accent);"></i> Site Theme</div>
-    </div>
-    <div class="a-card-body">
-        <form method="POST">
-            <?php echo csrf_input('admin_settings_theme'); ?>
-            <p class="text-muted mb-3" style="font-size:0.875rem;">Choose the visual style for the public-facing site. Changes take effect immediately.</p>
-            <div class="theme-grid mb-3">
-                <?php foreach ($themes as $slug => $theme): ?>
-                <label class="theme-option theme-<?php echo $slug; ?> <?php echo ($active_theme === $slug) ? 'selected' : ''; ?>">
-                    <input type="radio" name="active_theme" value="<?php echo $slug; ?>" <?php echo ($active_theme === $slug) ? 'checked' : ''; ?>>
-                    <div class="theme-preview">
-                        <div class="theme-preview-nav"></div>
-                        <div class="theme-preview-body">
-                            <div class="theme-preview-main"></div>
-                            <div class="theme-preview-side"></div>
-                        </div>
-                    </div>
-                    <div class="theme-label">
-                        <?php echo $theme['label']; ?>
-                        <div style="font-size:0.68rem; font-weight:400; color:var(--a-text-muted); margin-top:0.15rem;"><?php echo $theme['desc']; ?></div>
-                    </div>
-                </label>
-                <?php endforeach; ?>
-            </div>
-            <button type="submit" name="update_theme" class="btn btn-primary btn-sm">
-                <i class="bi bi-palette"></i> Apply Theme
-            </button>
-        </form>
-    </div>
-</div>
-
-<script>
-// Make theme cards clickable and highlight selected
-document.querySelectorAll('.theme-option').forEach(function(opt) {
-    opt.addEventListener('click', function() {
-        document.querySelectorAll('.theme-option').forEach(function(o){ o.classList.remove('selected'); });
-        this.classList.add('selected');
-    });
-});
-</script>
-
-<div class="a-grid-2">
-    <!-- General Config -->
-    <div class="a-card">
-        <div class="a-card-header">
-            <div class="a-card-title"><i class="bi bi-sliders" style="color:var(--a-accent);"></i> General Configuration</div>
-        </div>
-        <div class="a-card-body">
-            <form method="POST">
-                <?php echo csrf_input('admin_settings_update'); ?>
-                <div class="form-group">
-                    <label>Site Name</label>
-                    <input type="text" name="config[site_name]" value="<?php echo htmlspecialchars($res['site_name'] ?? ''); ?>" required>
-                </div>
-                <div class="form-group">
-                    <label>Footer Text</label>
-                    <input type="text" name="config[footer_text]" value="<?php echo htmlspecialchars($res['footer_text'] ?? ''); ?>">
-                </div>
-
-                <?php if (function_exists('run_hook')) run_hook('admin_settings_ui'); ?>
-
-                <?php foreach ($dynamic_sections as $sectionId => $section):
-                    $fields = (isset($section['fields']) && is_array($section['fields'])) ? $section['fields'] : [];
-                    if (empty($fields)) continue;
-                    $section_title = htmlspecialchars($section['title'] ?? ucfirst((string)$sectionId));
-                    $section_icon  = htmlspecialchars($section['icon'] ?? 'bi bi-puzzle');
-                ?>
-                    <hr>
-                    <div class="mb-2" style="display:flex; align-items:center; gap:0.5rem;">
-                        <i class="<?php echo $section_icon; ?>" style="color:var(--a-accent);"></i>
-                        <strong style="font-size:0.9rem;"><?php echo $section_title; ?></strong>
-                    </div>
-                    <?php if (!empty($section['description'])): ?>
-                        <p class="text-muted mb-2" style="font-size:0.8rem;"><?php echo htmlspecialchars($section['description']); ?></p>
-                    <?php endif; ?>
-                    <?php foreach ($fields as $field):
-                        $key   = $field['key'] ?? '';
-                        if (!is_string($key) || $key === '') continue;
-                        $label = htmlspecialchars($field['label'] ?? $key);
-                        $type  = strtolower((string)($field['type'] ?? 'text'));
-                        if (!in_array($type, $allowed_types, true)) $type = 'text';
-                        $placeholder = htmlspecialchars($field['placeholder'] ?? '');
-                        $help        = htmlspecialchars($field['help'] ?? '');
-                        $value       = htmlspecialchars((string)($res[$key] ?? $field['default'] ?? ''));
-                        $rows        = max(2, (int)($field['rows'] ?? 4));
-                    ?>
-                    <div class="form-group">
-                        <label><?php echo $label; ?></label>
-                        <?php if ($type === 'textarea'): ?>
-                            <textarea name="config[<?php echo htmlspecialchars($key); ?>]" rows="<?php echo $rows; ?>" placeholder="<?php echo $placeholder; ?>"><?php echo $value; ?></textarea>
-                        <?php else: ?>
-                            <input type="<?php echo $type; ?>" name="config[<?php echo htmlspecialchars($key); ?>]" value="<?php echo $value; ?>" placeholder="<?php echo $placeholder; ?>">
-                        <?php endif; ?>
-                        <?php if (!empty($help)): ?><div class="form-help"><?php echo $help; ?></div><?php endif; ?>
-                    </div>
-                    <?php endforeach; ?>
-                <?php endforeach; ?>
-
-                <button type="submit" name="update_settings" class="btn btn-primary btn-sm">
-                    <i class="bi bi-save"></i> Save Configuration
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Blog Categories -->
-    <div class="a-card">
-        <div class="a-card-header">
-            <div class="a-card-title"><i class="bi bi-tags" style="color:var(--a-warning);"></i> Blog Categories</div>
-        </div>
-        <div class="a-card-body">
-            <form method="POST" class="mb-3">
-                <?php echo csrf_input('admin_settings_add_category'); ?>
-                <div class="input-group">
-                    <input type="text" name="new_category" placeholder="New category name&hellip;" required>
-                    <button class="btn btn-success" type="submit" name="add_category">Add</button>
-                </div>
-            </form>
-
-            <?php if (empty($categories)): ?>
-                <div class="empty-state" style="padding: 1.5rem;">
-                    <span class="empty-icon"><i class="bi bi-tags"></i></span>
-                    <p class="text-muted text-sm">No categories yet.</p>
-                </div>
-            <?php else: ?>
-            <div class="a-table-wrap">
-                <table>
-                    <thead>
-                        <tr><th>Category</th><th style="width:50px;"></th></tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($categories as $c): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($c['name']); ?></td>
-                            <td>
-                                <form method="POST" onsubmit="return confirm('Remove this category?');">
-                                    <?php echo csrf_input('admin_settings_delete_category'); ?>
-                                    <input type="hidden" name="delete_cat" value="<?php echo (int)$c['id']; ?>">
-                                    <button type="submit" class="btn-link danger btn-sm"><i class="bi bi-x-circle"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+    <!-- Secondary sidebar -->
+    <nav class="settings-nav">
+        <div class="settings-nav-label">Settings</div>
+        <?php foreach ($all_sections as $slug => $sec):
+            $is_active   = ($section === $slug);
+            $file_exists = isset($sec['file']) && file_exists($sec['file']);
+        ?>
+        <a href="index.php?view=settings&section=<?php echo $slug; ?>"
+           class="settings-nav-item <?php echo $is_active ? 'active' : ''; ?> <?php echo !$file_exists ? 'coming-soon' : ''; ?>">
+            <i class="bi <?php echo htmlspecialchars($sec['icon']); ?>"></i>
+            <?php echo htmlspecialchars($sec['label']); ?>
+            <?php if (!$file_exists): ?>
+            <span class="settings-nav-soon">Soon</span>
             <?php endif; ?>
-        </div>
+        </a>
+        <?php endforeach; ?>
+    </nav>
+
+    <!-- Section content -->
+    <div class="settings-content">
+        <?php if (file_exists($active_file)): ?>
+            <?php include $active_file; ?>
+        <?php else: ?>
+            <div class="empty-state">
+                <span class="empty-icon"><i class="bi bi-tools"></i></span>
+                <h5><?php echo htmlspecialchars($all_sections[$section]['label']); ?></h5>
+                <p class="text-small">This settings section is coming soon.</p>
+            </div>
+        <?php endif; ?>
     </div>
+
 </div>
+
+<style>
+.settings-layout {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 0;
+    margin: -1.5rem;
+    min-height: calc(100vh - 60px);
+}
+
+.settings-nav {
+    border-right: 1px solid var(--a-border);
+    padding: 1.25rem 0;
+    background: var(--a-sidebar-bg, #f8f9fa);
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+.settings-nav-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--a-text-muted);
+    padding: 0 1.25rem 0.6rem;
+}
+
+.settings-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--a-text-muted);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    border-left: 3px solid transparent;
+    position: relative;
+}
+.settings-nav-item:hover {
+    background: rgba(0,0,0,0.03);
+    color: var(--a-text);
+    text-decoration: none;
+}
+.settings-nav-item.active {
+    background: rgba(0,0,0,0.04);
+    color: var(--a-accent);
+    border-left-color: var(--a-accent);
+    font-weight: 600;
+}
+.settings-nav-item.coming-soon {
+    opacity: 0.55;
+}
+.settings-nav-item i {
+    font-size: 0.9rem;
+    width: 1rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+.settings-nav-soon {
+    margin-left: auto;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--a-border);
+    color: var(--a-text-muted);
+    padding: 0.1em 0.45em;
+    border-radius: 100px;
+}
+
+.settings-content {
+    padding: 2rem 2.5rem;
+    min-width: 0;
+}
+
+@media (max-width: 768px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+        margin: -1rem;
+    }
+    .settings-nav {
+        border-right: none;
+        border-bottom: 1px solid var(--a-border);
+        padding: 0.75rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        position: static;
+    }
+    .settings-nav-label { display: none; }
+    .settings-nav-item {
+        border-left: none;
+        border-radius: 6px;
+        padding: 0.4rem 0.7rem;
+        font-size: 0.8rem;
+    }
+    .settings-nav-item.active {
+        border-left: none;
+        background: rgba(0,0,0,0.06);
+    }
+    .settings-content { padding: 1.5rem 1rem; }
+}
+</style>

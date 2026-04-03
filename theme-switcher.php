@@ -1,8 +1,7 @@
 <?php
 /**
  * Theme Switcher — Public AJAX Endpoint
- * Accepts POST { theme: string } and saves to settings DB.
- * Returns JSON { success: bool, theme: string }
+ * Validates theme against the dynamic registry (no hardcoded list).
  */
 
 header('Content-Type: application/json');
@@ -13,10 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$allowed_themes = ['broadsheet', 'inkwell', 'blueprint', 'fieldnotes', 'terminal', 'magazine'];
-$theme = trim($_POST['theme'] ?? '');
+require_once __DIR__ . '/includes/theme-registry.php';
 
-if (!in_array($theme, $allowed_themes)) {
+$slug = trim($_POST['theme'] ?? '');
+
+if (!tf_is_valid_theme($slug)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Invalid theme']);
     exit;
@@ -36,8 +36,8 @@ try {
         "INSERT INTO settings (key, value) VALUES ('active_theme', ?)
          ON CONFLICT(key) DO UPDATE SET value = excluded.value"
     );
-    $stmt->execute([$theme]);
-    echo json_encode(['success' => true, 'theme' => $theme]);
+    $stmt->execute([$slug]);
+    echo json_encode(['success' => true, 'theme' => $slug]);
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Database error']);

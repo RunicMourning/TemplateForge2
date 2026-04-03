@@ -1,0 +1,158 @@
+/*!
+ * @tf-label:   Broadsheet
+ * @tf-variant:  Dark
+ * @tf-group:    Broadsheet
+ * @tf-colors:   #1a1814,#eb6864,#f57a00,#f0e8d8
+ * @tf-layout:   Sidebar Right
+ * @tf-source:   TemplatForge
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=News+Cycle:wght@400;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap');
+
+/* ─── Design Tokens — Dark ─────────────────────────────────────── */
+:root {
+    --tf-bg:          #1a1814;
+    --tf-surface:     #242018;
+    --tf-surface-2:   #2e2a20;
+    --tf-border:      #3a342a;
+    --tf-text:        #f0e8d8;
+    --tf-text-muted:  #8a7e6e;
+    --tf-accent:      #eb6864;
+    --tf-accent-2:    #f57a00;
+    --tf-accent-dark: #c94c48;
+    --tf-nav-bg:      #0e0c0a;
+    --tf-nav-border:  #1a1510;
+    --tf-font-display: 'News Cycle', 'Arial Narrow Bold', sans-serif;
+    --tf-font-body:    'Merriweather', Georgia, serif;
+    --tf-radius:       2px;
+    --tf-radius-lg:    4px;
+    --tf-shadow:       0 4px 24px rgba(0,0,0,0.4);
+    --tf-shadow-sm:    0 2px 8px rgba(0,0,0,0.3);
+}
+
+body {
+    background-color: #1a1814;
+    background-color: var(--tf-bg);
+    color: var(--tf-text);
+    --tf-focus-ring: rgba(235, 104, 100, 0.25);
+}
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="search"], input[type="url"], input[type="number"],
+textarea, select {
+    background: var(--tf-surface);
+    border-color: var(--tf-border);
+    color: var(--tf-text);
+}
+
+/* ─── Layout: Sidebar right ────────────────────────────────────── */
+
+.container { max-width: 1100px; }
+
+@media (min-width: 1024px) {
+    .site-layout {
+        display: grid;
+        grid-template-columns: 1fr 260px;
+        gap: 3.5rem;
+    }
+    .site-main  { order: 1; }
+    .site-aside { order: 2; }
+}
+
+/* ─── Broadsheet Dark Components ───────────────────────────────── */
+
+.section-label {
+    font-family: var(--tf-font-display);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    border-top: 3px double var(--tf-text-muted);
+    border-bottom: 1px solid var(--tf-border);
+    padding: 0.5rem 0;
+    margin-bottom: 1.75rem;
+    color: var(--tf-text);
+    text-transform: uppercase;
+}
+.section-label::after { display: none; }
+.section-label i { color: var(--tf-accent); }
+
+.hero {
+    border-bottom: 3px double var(--tf-border);
+    padding-bottom: 2rem;
+    margin-bottom: 2.5rem;
+}
+.hero-title {
+    font-family: 'News Cycle', sans-serif;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    font-weight: 700;
+}
+.hero-eyebrow {
+    font-family: var(--tf-font-body);
+    font-size: 0.7rem;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    text-transform: none;
+    color: var(--tf-text-muted);
+    border-left: 3px solid var(--tf-accent);
+    padding-left: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.post-card {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--tf-border);
+    box-shadow: none;
+    background: transparent;
+}
+.post-card:last-child { border-bottom: none; }
+.post-card:hover { transform: none; box-shadow: none; background: var(--tf-surface-2); }
+.post-card-accent { display: none; }
+.post-card-body { padding: 1.25rem 1rem; }
+
+.feature-card {
+    border-radius: 0;
+    border-top: 3px solid var(--tf-accent);
+    box-shadow: none;
+    background: var(--tf-surface);
+    border-color: var(--tf-border);
+}
+.feature-card .card-accent { display: none; }
+
+.widget-card {
+    border-radius: 0;
+    border: none;
+    border-top: 3px double var(--tf-text-muted);
+    padding-top: 1rem;
+    background: transparent;
+    box-shadow: none;
+}
+.widget-card .card-accent { display: none; }
+.widget-title {
+    font-family: 'News Cycle', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    border-bottom: 1px solid var(--tf-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+.widget-title::after { display: none; }
+
+.nav-brand { font-family: 'News Cycle', sans-serif; font-size: 1.5rem; letter-spacing: -0.01em; font-weight: 700; }
+
+blockquote {
+    border-left: none;
+    border-top: 2px solid var(--tf-text-muted);
+    border-bottom: 2px solid var(--tf-text-muted);
+    padding: 1rem 0;
+    font-size: 1.15rem;
+    color: var(--tf-text);
+    text-align: center;
+    font-family: 'News Cycle', sans-serif;
+    margin: 2rem 0;
+    font-style: normal;
+}
+
+.btn { border-radius: 0; letter-spacing: 0.05em; font-size: 0.8rem; text-transform: uppercase; font-family: 'News Cycle', sans-serif; }

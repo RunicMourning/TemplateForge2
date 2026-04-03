@@ -1,0 +1,52 @@
+/*!
+ * @tf-label:   Fieldnotes
+ * @tf-variant:  Light
+ * @tf-group:    Fieldnotes
+ * @tf-colors:   #f8f5f0,#93c54b,#325d88,#3e3f3a
+ * @tf-layout:   Full Width
+ * @tf-source:   TemplatForge
+ */
+
+/*
+ * TemplatForge Theme: Fieldnotes
+ *   Primary: #325d88 (blue)  Success: #93c54b (green)  Warning: #f47c3c
+ *   BG: #f8f5f0  Text: #3e3f3a  Border: #dfd7ca
+ * Layout: Full-width, NO sidebar, single centered reading column
+ * Fonts: Roboto + system-ui
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
+
+/* ─── Design Tokens (Sandstone palette) ───────────────────────── */
+:root {
+    --tf-bg:          #f8f5f0;
+    --tf-surface:     #ffffff;
+    --tf-surface-2:   #f8f9fa;
+    --tf-border:      #dfd7ca;
+    --tf-text:        #3e3f3a;
+    --tf-text-muted:  #8e8c84;
+    --tf-accent:      #93c54b;
+    --tf-accent-2:    #325d88;
+    --tf-accent-dark: #76a038;
+    --tf-nav-bg:      #3e3f3a;
+    --tf-nav-border:  #2a2b27;
+    --tf-font-display: 'Roboto', system-ui, sans-serif;
+    --tf-font-body:    'Roboto', system-ui, sans-serif;
+    --tf-radius:       4px;
+    --tf-radius-lg:    8px;
+    --tf-shadow:       0 4px 20px rgba(0,0,0,0.07);
+    --tf-shadow-sm:    0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* ─── Layout: Full-width, no sidebar ──────────────────────────── */
+
+.container { max-width: 860px; }
+.container-wide { max-width: 860px; }
+
+.site-aside { display: none !important; }
+.site-layout {
+    grid-template-columns: 1fr !important;
+    gap: 2rem;
+    padding: 3rem 0;
+}
+.site-main { order: 1; max-width: 100
