@@ -63,12 +63,12 @@ if (function_exists('register_settings_section')) {
             <div class="card-body p-4">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Recipient Notification Email</label>
-                    <input type="email" name="config[contact_recipient_email]" value="' . $notif_email . '" class="form-control" placeholder="where@emails-go.com">
+                    <input type="email" name="config[contact_recipient_email]" value="' . $notif_email . '" class="" placeholder="where@emails-go.com">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Dropdown Subjects (One per line)</label>
-                    <textarea name="config[contact_subjects_list]" class="form-control" rows="4" placeholder="Enter subjects here...">' . $subjects_raw . '</textarea>
+                    <textarea name="config[contact_subjects_list]" class="" rows="4" placeholder="Enter subjects here...">' . $subjects_raw . '</textarea>
                 </div>
 
                 <hr class="my-4">
@@ -76,11 +76,11 @@ if (function_exists('register_settings_section')) {
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Turnstile Site Key</label>
-                        <input type="text" name="config[turnstile_site_key]" value="' . $site_key . '" class="form-control" placeholder="0x4AAAAAA...">
+                        <input type="text" name="config[turnstile_site_key]" value="' . $site_key . '" class="" placeholder="0x4AAAAAA...">
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Turnstile Secret Key</label>
-                        <input type="password" name="config[turnstile_secret_key]" value="' . $secret_key . '" class="form-control" placeholder="Keep this secret">
+                        <input type="password" name="config[turnstile_secret_key]" value="' . $secret_key . '" class="" placeholder="Keep this secret">
                     </div>
                 </div>
             </div>

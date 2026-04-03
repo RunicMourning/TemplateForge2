@@ -44,43 +44,43 @@ $nav_items = $db->query("SELECT * FROM navigation ORDER BY sort_order ASC")->fet
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">Manage Navigation</h2>
-        <span class="badge bg-info text-dark shadow-sm"><i class="bi bi-info-circle me-1"></i> Drag rows to reorder</span>
+<div class="">
+    <div class="a-flex gap-2">
+        <h2 class="fw-bold">Manage Navigation</h2>
+        <span class="badge"><i class="bi bi-info-circle me-1"></i> Drag rows to reorder</span>
     </div>
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <form method="POST" class="row g-3 align-items-end">
+    <div class="a-card">
+        <div class="a-card">
+            <form method="POST" class="a-flex-between flex-wrap gap-2">
                 <?php echo csrf_input('admin_navigation_save'); ?>
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold">Label</label>
-                    <input type="text" name="label" class="form-control" placeholder="About" required>
+                    <label class="form-label">Label</label>
+                    <input type="text" name="label" class="" placeholder="About" required>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold">URL</label>
-                    <input type="text" name="url" class="form-control" placeholder="about.php" required>
+                    <label class="form-label">URL</label>
+                    <input type="text" name="url" class="" placeholder="about.php" required>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold">Sort Order</label>
-                    <input type="number" name="sort_order" class="form-control" value="0">
+                    <label class="form-label">Sort Order</label>
+                    <input type="number" name="sort_order" class="" value="0">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold">CSS Class</label>
-                    <input type="text" name="css_class" class="form-control">
+                    <label class="form-label">CSS Class</label>
+                    <input type="text" name="css_class" class="">
                 </div>
-                <div class="col-md-2 d-grid">
+                <div class="d-grid">
                     <button type="submit" name="save_nav" class="btn btn-primary">Add Link</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
+    <div class="a-card">
+        <div class="">
+            <table class="">
+                <thead class="">
                     <tr>
                         <th width="50"></th>
                         <th>Label</th>
@@ -92,15 +92,15 @@ $nav_items = $db->query("SELECT * FROM navigation ORDER BY sort_order ASC")->fet
                 <tbody id="sortable-nav">
                     <?php foreach ($nav_items as $item): ?>
                     <tr data-id="<?php echo $item['id']; ?>" style="cursor: grab;">
-                        <td class="text-muted text-center"><i class="bi bi-grip-vertical fs-5"></i></td>
+                        <td class="text-muted"><i class="bi bi-grip-vertical fs-5"></i></td>
                         <td><span class="fw-bold"><?php echo htmlspecialchars($item['label']); ?></span></td>
                         <td><code><?php echo htmlspecialchars($item['url']); ?></code></td>
-                        <td class="text-center sort-val"><?php echo $item['sort_order']; ?></td>
+                        <td class="text-center"><?php echo $item['sort_order']; ?></td>
                         <td class="text-center">
                             <form method="POST" action="index.php?view=navigation" class="d-inline" onsubmit="return confirm('Remove link?')">
                                 <?php echo csrf_input('admin_navigation_delete'); ?>
                                 <input type="hidden" name="delete_nav" value="<?php echo (int) $item['id']; ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                <button type="submit" class="btn btn-outline btn-sm"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>

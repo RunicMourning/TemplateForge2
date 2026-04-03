@@ -39,16 +39,16 @@ if (isset($_POST['save_post'])) {
             $stmt = $db->prepare("UPDATE posts SET title=?, slug=?, category=?, content=?, excerpt=?, author=? WHERE id=?");
             $stmt->execute([$title, $slug, $category, $content, $excerpt, $current_user, $id]);
             log_activity($db, 'CRUD', 'Post Updated', $title);
-            $msg = '<div class="alert alert-success border-0 shadow-sm rounded-4">Post updated!</div>';
+            $msg = '<div class="alert alert-success">Post updated!</div>';
         } else {
             $stmt = $db->prepare("INSERT INTO posts (title, slug, category, content, excerpt, author) VALUES (?,?,?,?,?,?)");
             $stmt->execute([$title, $slug, $category, $content, $excerpt, $current_user]);
             log_activity($db, 'CRUD', 'Post Created', $title);
-            $msg = '<div class="alert alert-success border-0 shadow-sm rounded-4">Post published successfully!</div>';
+            $msg = '<div class="alert alert-success">Post published successfully!</div>';
         }
         $show_editor = false; 
     } catch (Exception $e) {
-        $msg = '<div class="alert alert-danger rounded-4">Error: ' . $e->getMessage() . '</div>';
+        $msg = '<div class="alert alert-danger">Error: ' . $e->getMessage() . '</div>';
     }
 }
 
@@ -78,14 +78,14 @@ $stmt->execute();
 $all_posts = $stmt->fetchAll();
 ?>
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="">
+    <div class="a-flex gap-2">
         <div>
-            <h2 class="fw-bold mb-0">Blog Manager</h2>
-            <p class="text-muted small mb-0">Manage your articles and news updates</p>
+            <h2 class="fw-bold">Blog Manager</h2>
+            <p class="text-muted">Manage your articles and news updates</p>
         </div>
         <?php if (!$show_editor): ?>
-            <a href="index.php?view=blog&action=new" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <a href="index.php?view=blog&action=new" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-2"></i>Create New Post
             </a>
         <?php else: ?>
@@ -98,24 +98,24 @@ $all_posts = $stmt->fetchAll();
     <?php echo $msg; ?>
 
     <?php if ($show_editor): ?>
-        <div class="row g-4 animate__animated animate__fadeIn">
+        <div class="a-flex-between flex-wrap gap-2">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
+                <div class="a-card">
+                    <div class="a-card">
                         <form method="POST" action="index.php?view=blog" id="postForm">
                             <?php echo csrf_input('admin_blog_save'); ?>
                             <?php if($edit_post): ?>
                                 <input type="hidden" name="post_id" value="<?php echo $edit_post['id']; ?>">
                             <?php endif; ?>
 
-                            <div class="row mb-3 g-3">
+                            <div class="a-flex-between flex-wrap gap-2">
                                 <div class="col-md-8">
-                                    <label class="form-label small fw-bold text-uppercase text-muted">Post Title</label>
-                                    <input type="text" name="title" class="form-control form-control-lg border-0 bg-light rounded-3" placeholder="Enter catchy title..." value="<?php echo $edit_post['title'] ?? ''; ?>" required>
+                                    <label class="form-label">Post Title</label>
+                                    <input type="text" name="title" class="" placeholder="Enter catchy title..." value="<?php echo $edit_post['title'] ?? ''; ?>" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label small fw-bold text-uppercase text-muted">Category</label>
-                                    <select name="category" class="form-select form-select-lg border-0 bg-light rounded-3">
+                                    <label class="form-label">Category</label>
+                                    <select name="category" class="">
                                         <option value="General" <?php echo ($edit_post['category'] ?? '') == 'General' ? 'selected' : ''; ?>>General</option>
                                         <option value="News" <?php echo ($edit_post['category'] ?? '') == 'News' ? 'selected' : ''; ?>>News</option>
                                         <option value="Tutorial" <?php echo ($edit_post['category'] ?? '') == 'Tutorial' ? 'selected' : ''; ?>>Tutorial</option>
@@ -123,19 +123,19 @@ $all_posts = $stmt->fetchAll();
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-uppercase text-muted">URL Slug</label>
+                            <div class="mb-2">
+                                <label class="form-label">URL Slug</label>
                                 <div class="input-group">
-                                    <span class="input-group-text border-0 bg-light text-muted">/blog-</span>
-                                    <input type="text" name="slug" class="form-control border-0 bg-light" placeholder="url-path" value="<?php echo $edit_post['slug'] ?? ''; ?>" required>
-                                    <span class="input-group-text border-0 bg-light text-muted">.html</span>
+                                    <span class="input-group">/blog-</span>
+                                    <input type="text" name="slug" class="" placeholder="url-path" value="<?php echo $edit_post['slug'] ?? ''; ?>" required>
+                                    <span class="input-group">.html</span>
                                 </div>
                             </div>
 
                             <div class="mb-2">
-                                <label class="form-label small fw-bold text-uppercase text-muted">Content Editor</label>
-<div class="card border-0 bg-white shadow-sm mb-2">
-    <div class="card-body p-2 d-flex flex-wrap gap-1">
+                                <label class="form-label">Content Editor</label>
+<div class="a-card">
+    <div class="a-card">
         <button type="button" class="btn btn-light btn-sm" onclick="wrapText('strong')" title="Bold"><i class="bi bi-type-bold"></i></button>
         <button type="button" class="btn btn-light btn-sm" onclick="wrapText('em')" title="Italic"><i class="bi bi-type-italic"></i></button>
         <button type="button" class="btn btn-light btn-sm" onclick="wrapText('u')" title="Underline"><i class="bi bi-type-underline"></i></button>
@@ -159,21 +159,21 @@ $all_posts = $stmt->fetchAll();
         <button type="button" class="btn btn-light btn-sm" onclick="setAlignment('right')" title="Align Right"><i class="bi bi-text-right"></i></button>
     </div>
 </div>
-                                <textarea name="content" id="postEditor" rows="15" class="form-control border-0 bg-light rounded-3 font-monospace" oninput="updatePreview()"><?php echo $edit_post['content'] ?? ''; ?></textarea>
+                                <textarea name="content" id="postEditor" rows="15" class="" oninput="updatePreview()"><?php echo $edit_post['content'] ?? ''; ?></textarea>
                             </div>
 
                             <div class="d-grid d-md-flex justify-content-md-end gap-2">
-                                <button type="submit" name="save_post" class="btn btn-primary px-5 rounded-pill shadow">Save & Publish Post</button>
+                                <button type="submit" name="save_post" class="btn btn-primary">Save & Publish Post</button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4 mt-4">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold mb-0 text-muted text-uppercase small">Live Preview</h5>
+                <div class="a-card">
+                    <div class="a-card">
+                        <h5 class="fw-bold">Live Preview</h5>
                     </div>
-                    <div class="card-body p-4">
+                    <div class="a-card">
                         <div id="preview" class="p-3 border rounded-3 bg-white" style="min-height: 150px;">
                             <?php echo $edit_post['content'] ?? ''; ?>
                         </div>
@@ -190,19 +190,19 @@ $all_posts = $stmt->fetchAll();
         </div>
 
         <div id="colorPickerOverlay" style="display: none; position: absolute; background-color: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 10px; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-            <input type="color" id="colorPicker" class="form-control form-control-color mb-2" value="#000000">
-            <button type="button" class="btn btn-sm btn-dark w-100" onclick="applyTextColor()">Apply</button>
+            <input type="color" id="colorPicker" class="" value="#000000">
+            <button type="button" class="btn btn-outline btn-sm" onclick="applyTextColor()">Apply</button>
         </div>
 
     <?php else: ?>
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="card-header bg-white py-3 px-4 border-0">
-                <form method="GET" class="row g-2 align-items-center">
+        <div class="a-card">
+            <div class="a-card">
+                <form method="GET" class="a-flex-between flex-wrap gap-2">
                     <input type="hidden" name="view" value="blog">
                     <div class="col-md-4">
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" name="s" class="form-control bg-light border-0" placeholder="Search articles..." value="<?php echo htmlspecialchars($search); ?>">
+                            <span class="input-group"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" name="s" class="" placeholder="Search articles..." value="<?php echo htmlspecialchars($search); ?>">
                         </div>
                     </div>
                     <div class="col-auto">
@@ -210,35 +210,35 @@ $all_posts = $stmt->fetchAll();
                     </div>
                     <?php if($search): ?>
                         <div class="col-auto">
-                            <a href="index.php?view=blog" class="text-muted small text-decoration-none">Clear Search</a>
+                            <a href="index.php?view=blog" class="text-muted">Clear Search</a>
                         </div>
                     <?php endif; ?>
                 </form>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+            <div class="">
+                <table class="">
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4 text-muted small text-uppercase py-3">Article</th>
-                            <th class="text-muted small text-uppercase py-3">Category</th>
-                            <th class="text-muted small text-uppercase py-3">Author</th>
-                            <th class="text-muted small text-uppercase py-3">Date</th>
-                            <th class="text-end pe-4 text-muted small text-uppercase py-3">Actions</th>
+                            <th class="text-muted">Category</th>
+                            <th class="text-muted">Author</th>
+                            <th class="text-muted">Date</th>
+                            <th >Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if(empty($all_posts)): ?>
-                            <tr><td colspan="5" class="text-center py-5 text-muted">No blog posts found.</td></tr>
+                            <tr><td colspan="5" class="text-center">No blog posts found.</td></tr>
                         <?php endif; ?>
                         <?php foreach($all_posts as $p): ?>
                         <tr class="hover-bg-light transition-all">
                             <td class="ps-4">
-                                <div class="fw-bold text-dark"><?php echo htmlspecialchars($p['title']); ?></div>
-                                <div class="text-muted x-small">/blog-<?php echo $p['slug']; ?>.html</div>
+                                <div class="fw-bold"><?php echo htmlspecialchars($p['title']); ?></div>
+                                <div class="text-muted">/blog-<?php echo $p['slug']; ?>.html</div>
                             </td>
-                            <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3"><?php echo $p['category'] ?? 'General'; ?></span></td>
+                            <td><span class="badge"><?php echo $p['category'] ?? 'General'; ?></span></td>
                             <td>
-                                <div class="d-flex align-items-center">
+                                <div class="a-flex gap-2">
                                     <div class="bg-secondary-subtle rounded-circle d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px;">
                                         <i class="bi bi-person text-secondary" style="font-size: 0.8rem;"></i>
                                     </div>
@@ -246,14 +246,14 @@ $all_posts = $stmt->fetchAll();
                                 </div>
                             </td>
                             <td><small class="text-muted"><?php echo date('M j, Y', strtotime($p['created_at'])); ?></small></td>
-                            <td class="text-end pe-4">
-                                <a href="index.php?view=blog&edit=<?php echo $p['id']; ?>" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 me-1" title="Edit">
+                            <td >
+                                <a href="index.php?view=blog&edit=<?php echo $p['id']; ?>" class="btn btn-outline btn-sm" title="Edit">
                                     <i class="bi bi-pencil text-primary"></i>
                                 </a>
                                 <form method="POST" action="index.php?view=blog" class="d-inline" onsubmit="return confirm('Permanent delete this post?')">
                                     <?php echo csrf_input('admin_blog_delete'); ?>
                                     <input type="hidden" name="delete_post" value="<?php echo (int) $p['id']; ?>">
-                                    <button type="submit" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 text-danger" title="Delete">
+                                    <button type="submit" class="btn btn-outline btn-sm" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -265,7 +265,7 @@ $all_posts = $stmt->fetchAll();
             </div>
             
             <?php if($pages_total > 1): ?>
-            <div class="card-footer bg-white border-0 py-3 px-4">
+            <div class="a-card">
                 <nav>
                     <ul class="pagination pagination-sm mb-0 justify-content-center">
                         <?php for($i=1; $i<=$pages_total; $i++): ?>

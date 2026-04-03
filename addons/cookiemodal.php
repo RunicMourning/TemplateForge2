@@ -11,7 +11,7 @@ add_hook('footer_bottom', function() {
         <p class="mb-0" style="flex: 1;">
           We use essential cookies for site functionality. <a href="/privacy.html" class="text-white text-decoration-underline">Privacy Policy</a>.
         </p>
-        <button id="acceptCookies" class="btn btn-primary btn-sm">Accept</button>
+        <button id="acceptCookies" class="btn btn-primary">Accept</button>
       </div>
     </div>
     <script>
@@ -34,7 +34,7 @@ add_hook('footer_bottom', function() {
 add_hook('privacy_policy_disclosures', function() {
     echo '<section class="mb-3 ps-3 border-start">
             <h4 class="h6 fw-semibold mb-1">Cookie Consent & Preferences</h4>
-            <p class="text-muted mb-0">
+            <p class="text-muted">
                 This website uses local storage to save your consent preferences. No personal data is collected or transmitted to third parties.
             </p>
           </section>';

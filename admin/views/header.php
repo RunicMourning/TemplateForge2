@@ -3,110 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page['title'] ?? 'Admin Panel'; ?></title>
-    <link href="<?php echo htmlspecialchars(get_admin_theme_css_url($settings), ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
+    <title><?php echo htmlspecialchars($page['title'] ?? 'Admin'); ?> &mdash; <?php echo htmlspecialchars($settings['site_name'] ?? 'TemplatForge'); ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        :root { --sidebar-width: 260px; --topbar-height: 60px; }
-        body { background-color: var(--bs-body-bg); overflow-x: hidden; }
-        #sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; background-color: #212529; transition: all 0.3s; }
-        .nav-link { color: #adb5bd; font-weight: 500; }
-        .nav-link:hover, .nav-link.active { color: #fff; background-color: rgba(255, 255, 255, 0.1); }
-        .sidebar-heading { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1rem; color: #6c757d; padding: 1.5rem 1rem 0.5rem; }
-        main { margin-left: var(--sidebar-width); padding-top: var(--topbar-height); min-height: 100vh; }
-        .top-bar { height: var(--topbar-height); margin-left: var(--sidebar-width); background: var(--bs-body-bg); border-bottom: 1px solid var(--bs-border-color); z-index: 99; }
-        
-        /* Icon Colors */
-        #sidebar .bi-speedometer2 { color: #0dcaf0; }
-        #sidebar .bi-files        { color: #ffca28; }
-        #sidebar .bi-journal-text { color: #42a5f5; }
-        #sidebar .bi-list         { color: #ab47bc; }
-        #sidebar .bi-gear         { color: #9e9e9e; }
-        #sidebar .bi-people       { color: #66bb6a; }
-        #sidebar .bi-terminal     { color: #ef5350; }
-        #sidebar i { width: 1.5rem; display: inline-block; text-align: center; margin-right: 8px; }
-    </style>
+    <link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body>
 
-<nav id="sidebar" class="d-flex flex-column">
-    <div class="p-3">
-        <a href="index.php" class="text-white text-decoration-none fs-4 fw-bold"><?php echo htmlspecialchars($settings['site_name']); ?> Admin</a>
+<!-- Mobile overlay -->
+<div id="a-overlay"></div>
+
+<!-- Sidebar -->
+<nav id="a-sidebar">
+    <div class="sidebar-brand">
+        <span class="sidebar-brand-name">
+            <i class="bi bi-intersect"></i>
+            <?php echo htmlspecialchars($settings['site_name'] ?? 'TemplatForge'); ?>
+        </span>
+        <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">
+            <i class="bi bi-x-lg"></i>
+        </button>
     </div>
-    <div class="nav flex-column flex-nowrap">
-        <?php
-        // 1. Scan for actual files
-        $modules = glob("modules/*.php");
-        $all_slugs = array_map(fn($m) => basename($m, ".php"), $modules);
 
-        // 2. Define known categories
-        $categories = [
-            'Overview'      => ['dashboard', 'analytics'], // Added analytics here
-            'Content'       => ['pages', 'blog', 'categories'],
-            'Configuration' => ['navigation', 'settings'],
-            'System'        => ['users', 'logs']
-        ];
+    <?php
+    $modules        = glob("modules/*.php");
+    $all_slugs      = array_map(fn($m) => basename($m, ".php"), $modules);
 
-        // 3. Auto-Discovery: Find modules not in any category
-        $categorized_slugs = [];
-        foreach ($categories as $list) {
-            $categorized_slugs = array_merge($categorized_slugs, $list);
-        }
-        
-        $orphans = array_diff($all_slugs, $categorized_slugs);
-        if (!empty($orphans)) {
-            // Append orphan modules to the 'System' group
-            $categories['System'] = array_merge($categories['System'], $orphans);
-        }
+    $categories = [
+        'Overview'      => ['dashboard', 'analytics'],
+        'Content'       => ['pages', 'blog', 'categories'],
+        'Configuration' => ['navigation', 'settings'],
+        'System'        => ['users', 'logs'],
+    ];
 
-        $icons = [
-            'dashboard'  => 'bi-speedometer2', 
-            'analytics'  => 'bi-graph-up', 
-            'pages'      => 'bi-files', 
-            'blog'       => 'bi-journal-text',
-            'categories' => 'bi-tags',
-            'navigation' => 'bi-list', 
-            'settings'   => 'bi-gear', 
-            'users'      => 'bi-people', 
-            'logs'       => 'bi-terminal'
-        ];
+    $categorized = array_merge(...array_values($categories));
+    $orphans     = array_diff($all_slugs, $categorized);
+    if (!empty($orphans)) $categories['System'] = array_merge($categories['System'], $orphans);
 
-        // 4. Render the Navigation
-        foreach ($categories as $groupName => $groupSlugs):
-            // Only show the group if at least one module file exists
-            $existingInGroup = array_intersect($groupSlugs, $all_slugs);
-            if (empty($existingInGroup)) continue;
+    $icons = [
+        'dashboard'  => 'bi-speedometer2',
+        'analytics'  => 'bi-graph-up',
+        'pages'      => 'bi-files',
+        'blog'       => 'bi-journal-text',
+        'categories' => 'bi-tags',
+        'navigation' => 'bi-list',
+        'settings'   => 'bi-gear',
+        'users'      => 'bi-people',
+        'logs'       => 'bi-terminal',
+    ];
 
-            echo '<div class="sidebar-heading">' . $groupName . '</div>';
-            foreach ($existingInGroup as $slug):
-                $isActive = (isset($_GET['view']) && $_GET['view'] == $slug) || (!isset($_GET['view']) && $slug == 'dashboard');
-                $icon = $icons[$slug] ?? 'bi-puzzle'; // Default icon for unknown modules
-                ?>
-                <a href="index.php?view=<?php echo $slug; ?>" class="nav-link px-3 py-2 <?php echo $isActive ? 'active' : ''; ?>">
-                    <i class="bi <?php echo $icon; ?> me-2"></i> <?php echo ucfirst($slug); ?>
-                </a>
-            <?php endforeach;
-        endforeach; ?>
-    </div>
+    $current_view = $_GET['view'] ?? 'dashboard';
+
+    echo '<div class="sidebar-nav">';
+    foreach ($categories as $group => $slugs):
+        $existing = array_intersect($slugs, $all_slugs);
+        if (empty($existing)) continue;
+        echo '<div class="sidebar-section-label">' . $group . '</div>';
+        foreach ($existing as $slug):
+            $active = ($current_view === $slug) ? 'active' : '';
+            $icon   = $icons[$slug] ?? 'bi-puzzle';
+            echo '<a href="index.php?view=' . $slug . '" class="' . $active . '">'
+               . '<i class="bi ' . $icon . '"></i>'
+               . ucfirst($slug)
+               . '</a>';
+        endforeach;
+    endforeach;
+    echo '</div>';
+    ?>
 </nav>
 
-<header class="top-bar fixed-top d-flex align-items-center px-4 justify-content-between">
-    <div>
-        <a href="../index.php" target="_blank" class="btn btn-outline-secondary btn-sm">
-            View Site <i class="bi bi-box-arrow-up-right ms-1"></i>
-        </a>
-    </div>
-    <div class="dropdown">
-        <a href="#" class="d-flex align-items-center text-dark text-decoration-none text-capitalize dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="bi bi-person-circle pe-2"></i> <strong><?php echo htmlspecialchars($_SESSION['display_name'] ?? $_SESSION['username'] ?? 'Admin'); ?></strong>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end shadow">
-            <li><a class="dropdown-item" href="index.php?view=users"><i class="bi bi-gear me-2"></i> Security Settings</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i> Log out</a></li>
-        </ul>
+<!-- Topbar -->
+<header id="a-topbar">
+    <button class="topbar-menu-btn" id="sidebarOpen" aria-label="Open menu">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <a href="../index.php" target="_blank" class="topbar-site-link">
+        View Site <i class="bi bi-box-arrow-up-right"></i>
+    </a>
+
+    <div class="topbar-right">
+        <div class="topbar-user" id="userMenuToggle">
+            <i class="bi bi-person-circle"></i>
+            <span><?php echo htmlspecialchars($_SESSION['username'] ?? 'Admin'); ?></span>
+            <i class="bi bi-chevron-down" style="font-size:0.7rem; color:var(--a-text-muted);"></i>
+            <div class="topbar-dropdown" id="userDropdown">
+                <a href="index.php?view=users"><i class="bi bi-gear"></i> Security Settings</a>
+                <div class="divider"></div>
+                <a href="logout.php" class="danger"><i class="bi bi-box-arrow-right"></i> Log out</a>
+            </div>
+        </div>
     </div>
 </header>
 
-<main>
-    <div class="container-fluid p-4">
+<script>
+(function(){
+    // Sidebar open/close
+    var sidebar  = document.getElementById('a-sidebar');
+    var overlay  = document.getElementById('a-overlay');
+    var openBtn  = document.getElementById('sidebarOpen');
+    var closeBtn = document.getElementById('sidebarClose');
+
+    function openSidebar(){
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar(){
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    if(openBtn)  openBtn.addEventListener('click', openSidebar);
+    if(closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if(overlay)  overlay.addEventListener('click', closeSidebar);
+
+    // User dropdown
+    var userToggle   = document.getElementById('userMenuToggle');
+    var userDropdown = document.getElementById('userDropdown');
+    if(userToggle && userDropdown){
+        userToggle.addEventListener('click', function(e){
+            e.stopPropagation();
+            userDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', function(){
+            userDropdown.classList.remove('open');
+        });
+    }
+})();
+</script>
+
+<main id="a-main">

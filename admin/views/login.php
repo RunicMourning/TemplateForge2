@@ -3,121 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMS Core | Admin Login</title>
-    
-    <link href="<?php echo htmlspecialchars(get_admin_theme_css_url($settings), ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
+    <title>Admin Login &mdash; <?php echo htmlspecialchars($settings['site_name'] ?? 'TemplatForge'); ?></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
+    <link rel="stylesheet" href="/admin/admin.css">
     <style>
         body {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bs-body-bg);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--a-bg);
+            padding: 1.5rem;
         }
-        .login-box {
-            background: var(--bs-body-bg);
-            padding: 0;
-            border-radius: 1rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+
+        .login-wrap {
             width: 100%;
             max-width: 400px;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            background: rgba(79,126,248,0.12);
+            border: 1px solid rgba(79,126,248,0.25);
+            border-radius: 14px;
+            font-size: 1.5rem;
+            color: var(--a-accent);
+            margin-bottom: 0.75rem;
+        }
+
+        .login-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 0.25rem;
+        }
+
+        .login-sub {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.35);
+        }
+
+        .login-card {
+            background: #1a1d27;
+            border: 1px solid #2a2d3e;
+            border-radius: 14px;
             overflow: hidden;
-            border: 1px solid var(--bs-border-color);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.4);
         }
-        .login-header {
-            padding: 2.5rem 2.5rem 1rem;
-            text-align: center;
+
+        .login-card-accent {
+            height: 3px;
+            background: linear-gradient(90deg, var(--a-accent), #a78bfa);
         }
-        .login-body {
-            padding: 1rem 2.5rem 2.5rem;
+
+        .login-card-body { padding: 2rem; }
+
+        .login-card label {
+            color: rgba(255,255,255,0.45);
         }
+
+        .login-card input {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.9);
+        }
+
+        .login-card input:focus {
+            border-color: var(--a-accent);
+            background: rgba(255,255,255,0.07);
+        }
+
+        .login-card input::placeholder { color: rgba(255,255,255,0.2); }
+
         .login-footer {
-            padding: 1.5rem;
-            background: color-mix(in srgb, var(--bs-body-bg) 88%, var(--bs-body-color) 12%);
-            border-top: 1px solid var(--bs-border-color);
             text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.2);
         }
-        .gradient-bar {
-            height: 5px;
-            background: linear-gradient(90deg, #6610f2, #0d6efd);
-        }
-        .form-control {
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            border: 1px solid var(--bs-border-color);
-            background-color: var(--bs-body-bg);
-        }
-        .form-control:focus {
-            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
-            border-color: #0d6efd;
-        }
-        .btn-primary {
-            padding: 0.75rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #0d6efd 0%, #004dc7 100%);
-            border: none;
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
-        }
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 15px rgba(13, 110, 253, 0.3);
-        }
-        .tracking-widest { letter-spacing: 0.15em; }
     </style>
 </head>
 <body>
 
-<div class="login-box">
-    <div class="gradient-bar"></div>
-    
-    <div class="login-header">
-        <div class="bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
-            <i class="bi bi-cpu-fill fs-3"></i>
-        </div>
-        <h4 class="fw-bold text-dark mb-1">Admin Console</h4>
-        <p class="small text-muted text-uppercase tracking-widest mb-0">System Authentication</p>
+<div class="login-wrap">
+    <div class="login-logo">
+        <div class="login-logo-mark"><i class="bi bi-intersect"></i></div>
+        <div class="login-title"><?php echo htmlspecialchars($settings['site_name'] ?? 'TemplatForge'); ?></div>
+        <div class="login-sub">Admin Portal</div>
     </div>
-    
-    <div class="login-body">
-        <?php if(isset($error)): ?>
-            <div class="alert alert-danger border-0 small py-2 text-center mb-4 rounded-3">
-                <i class="bi bi-exclamation-triangle me-2"></i> <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
 
-        <form method="post">
-            <?php echo csrf_input('admin_login'); ?>
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-muted">Username</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0 text-muted px-3"><i class="bi bi-person"></i></span>
-                    <input type="text" name="user" class="form-control border-start-0 ps-0" placeholder="Enter username" required autofocus>
+    <div class="login-card">
+        <div class="login-card-accent"></div>
+        <div class="login-card-body">
+            <?php if (!empty($error)): ?>
+                <div class="alert alert-danger mb-3">
+                    <i class="bi bi-shield-exclamation"></i>
+                    <?php echo htmlspecialchars($error); ?>
                 </div>
-            </div>
-            <div class="mb-4">
-                <label class="form-label small fw-bold text-muted">Password</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0 text-muted px-3"><i class="bi bi-shield-lock"></i></span>
-                    <input type="password" name="pass" class="form-control border-start-0 ps-0" placeholder="Enter password" required>
+            <?php endif; ?>
+
+            <form method="POST" action="index.php">
+                <?php echo csrf_input('admin_login'); ?>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="user" placeholder="Enter username" required autocomplete="username">
                 </div>
-            </div>
-            <button type="submit" name="login" class="btn btn-primary w-100 mb-2">
-                Log In to Core <i class="bi bi-arrow-right-short ms-1"></i>
-            </button>
-        </form>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Password</label>
+                    <input type="password" name="pass" placeholder="Enter password" required autocomplete="current-password">
+                </div>
+                <button type="submit" name="login" class="btn btn-primary w-full">
+                    Sign In <i class="bi bi-arrow-right-short"></i>
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="login-footer">
-        <a href="../" class="text-decoration-none small text-muted hover-primary">
-            <i class="bi bi-house-door me-1"></i> Return to Homepage
+        <a href="../index.php" style="color: rgba(255,255,255,0.25);">
+            <i class="bi bi-arrow-left" style="margin-right:0.3rem;"></i>Back to site
         </a>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

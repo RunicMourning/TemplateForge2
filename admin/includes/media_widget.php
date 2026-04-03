@@ -46,7 +46,7 @@ if (isset($_POST['ajax_upload_media'])) {
         <form method="POST" enctype="multipart/form-data" class="mb-3">
             <?php echo csrf_input('admin_media_upload'); ?>
             <div class="input-group input-group-sm">
-                <input type="file" name="tray_file" class="form-control" required>
+                <input type="file" name="tray_file" class="" required>
                 <button class="btn btn-primary" type="submit" name="ajax_upload_media">Upload</button>
             </div>
         </form>
@@ -64,7 +64,7 @@ if (isset($_POST['ajax_upload_media'])) {
                             <?php endif; ?>
                             <div class="overflow-hidden">
                                 <div class="text-truncate small fw-bold"><?php echo $item['name']; ?></div>
-                                <small class="text-muted status-text">Click to insert</small>
+                                <small class="text-muted">Click to insert</small>
                             </div>
                         </div>
                     </div>
@@ -101,7 +101,7 @@ function insertMedia(path, isImg, el) {
         
         tag = `<img src="${fullPath}" alt="${finalAlt}" class="img-fluid rounded shadow-sm my-3">`;
     } else {
-        tag = `<a href="${fullPath}" target="_blank" class="btn btn-outline-primary btn-sm my-2">Download File</a>`;
+        tag = `<a href="${fullPath}" target="_blank" class="btn btn-outline">Download File</a>`;
     }
 
     // Insert at cursor position

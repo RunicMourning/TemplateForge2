@@ -125,15 +125,15 @@ add_hook('privacy_policy_disclosures', function() {
     echo '
     <section class="mb-3 ps-3 border-start border-primary">
         <h4 class="h6 fw-semibold mb-1">Community Chat (Discord & WidgetBot)</h4>
-        <p class="text-muted small mb-2">
+        <p class="text-muted">
             We provide an integrated chat feature via WidgetBot and Discord. By using the chat widget:
         </p>
-        <ul class="text-muted small">
+        <ul class="text-muted">
             <li>Your IP address is used locally to generate a temporary guest username.</li>
             <li>Messages sent via the widget are processed by Discord.com and stored according to their retention policies.</li>
             <li>WidgetBot may use essential cookies to maintain your chat session across page navigation.</li>
         </ul>
-        <p class="text-muted small mb-0">
+        <p class="text-muted">
             For more details, please see the <a href="https://discord.com/privacy" target="_blank" rel="noopener">Discord Privacy Policy</a>.
         </p>
     </section>';

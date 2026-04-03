@@ -1,157 +1,143 @@
 <?php
 /**
  * Template Name: Blog Index
- * Description: Clean card-based blog with top accent bars and synced sidebar styles.
+ * Description: Editorial blog listing with sidebar.
  */
 
-// 1. DATA FETCHING (Sidebar)
+// 1. Data
 $categories = $db->query("SELECT category, COUNT(*) as count FROM posts WHERE status = 'published' GROUP BY category ORDER BY count DESC")->fetchAll();
-$popular = $db->query("SELECT title, slug, created_at FROM posts WHERE status = 'published' ORDER BY created_at DESC LIMIT 5")->fetchAll();
+$popular     = $db->query("SELECT title, slug, created_at FROM posts WHERE status = 'published' ORDER BY created_at DESC LIMIT 5")->fetchAll();
 
-
-
-// 2. CAPTURE SIDEBAR HTML
+// 2. Sidebar
 ob_start(); ?>
-<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style="background: #ffffff;">
-    <div style="height: 4px; background: linear-gradient(90deg, #6610f2, var(--bs-primary));"></div>
-    <div class="card-header bg-transparent border-0 pt-4 pb-0">
-        <h6 class="text-uppercase fw-bold text-muted tracking-widest mb-1" style="font-size: 0.7rem;">Explore</h6>
-        <h5 class="fw-bold d-flex align-items-center text-dark">
-            <i class="bi bi-collection-play-fill me-2 text-primary"></i> Categories
-        </h5>
-    </div>
-    <div class="card-body">
-        <div class="list-group list-group-flush">
-            <?php foreach ($categories as $cat): 
-                $catName = !empty($cat['category']) ? $cat['category'] : 'General';
-            ?>
-                <a href="category-<?php echo urlencode($catName); ?>.html" 
-                   class="list-group-item list-group-item-action bg-transparent px-2 d-flex justify-content-between align-items-center border-light-subtle small rounded-3 mb-1">
-                    <span><i class="bi bi-chevron-right small opacity-50 me-1"></i> <?php echo htmlspecialchars($catName); ?></span>
-                    <span class="badge rounded-pill bg-light text-primary border border-primary-subtle"><?php echo $cat['count']; ?></span>
+
+<div class="widget-card mb-3">
+    <div class="card-accent"></div>
+    <div class="p-3">
+        <div class="widget-title"><i class="bi bi-collection-play-fill"></i> Categories</div>
+        <?php if (empty($categories)): ?>
+            <p class="text-muted text-small">No categories yet.</p>
+        <?php else: ?>
+            <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                <?php foreach ($categories as $cat):
+                    $catName = !empty($cat['category']) ? $cat['category'] : 'General';
+                ?>
+                <a href="category-<?php echo urlencode($catName); ?>.html"
+                   style="display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0.6rem; border-radius: var(--tf-radius); color: var(--tf-text-muted); font-size: 0.875rem; text-decoration: none; transition: background 0.15s, color 0.15s;"
+                   onmouseover="this.style.background='var(--tf-surface-2)'; this.style.color='var(--tf-text)';"
+                   onmouseout="this.style.background=''; this.style.color='var(--tf-text-muted)';">
+                    <span><i class="bi bi-chevron-right" style="font-size: 0.7rem; margin-right: 0.35rem; opacity: 0.5;"></i><?php echo htmlspecialchars($catName); ?></span>
+                    <span class="badge"><?php echo $cat['count']; ?></span>
                 </a>
-            <?php endforeach; ?>
-        </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
-<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4" style="background: #ffffff;">
-    <div style="height: 4px; background: linear-gradient(90deg, #fd7e14, #ffc107);"></div>
-    <div class="card-header bg-transparent border-0 pt-4 pb-0">
-        <h6 class="text-uppercase fw-bold text-muted tracking-widest mb-1" style="font-size: 0.7rem;">Popular</h6>
-        <h5 class="fw-bold d-flex align-items-center text-dark">
-            <i class="bi bi-fire me-2 text-warning"></i> Trending Now
-        </h5>
-    </div>
-    <div class="card-body">
-        <div class="vstack gap-3">
-            <?php foreach ($popular as $pop): ?>
-                <div class="popular-post-item ps-3 border-start border-2 border-light-subtle">
-                    <a href="blog-<?php echo $pop['slug']; ?>.html" class="text-decoration-none text-dark fw-bold d-block lh-sm mb-1 small link-primary-hover">
+<div class="widget-card">
+    <div class="card-accent" style="background: linear-gradient(90deg, var(--tf-accent-2), var(--tf-accent));"></div>
+    <div class="p-3">
+        <div class="widget-title"><i class="bi bi-fire" style="color: var(--tf-accent-2);"></i> Recent Posts</div>
+        <?php if (empty($popular)): ?>
+            <p class="text-muted text-small">No posts yet.</p>
+        <?php else: ?>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <?php foreach ($popular as $pop): ?>
+                <div style="padding-left: 0.75rem; border-left: 2px solid var(--tf-border);">
+                    <a href="blog-<?php echo $pop['slug']; ?>.html"
+                       style="font-size: 0.875rem; font-weight: 600; color: var(--tf-text); text-decoration: none; line-height: 1.4; display: block; margin-bottom: 0.2rem;">
                         <?php echo htmlspecialchars($pop['title']); ?>
                     </a>
-                    <div class="d-flex align-items-center text-muted" style="font-size: 0.65rem;">
-                        <i class="bi bi-clock me-1"></i>
+                    <div style="font-size: 0.72rem; color: var(--tf-text-muted);">
+                        <i class="bi bi-clock" style="margin-right: 0.25rem;"></i>
                         <?php echo date('M j, Y', strtotime($pop['created_at'])); ?>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
-</div>
-<?php 
-$blog_sidebar = ob_get_clean();
-set_page_sidebar($blog_sidebar); 
-?>
-<div class="container">
-    <div class="mb-5">
-        <h1 class="display-5 fw-bold mb-1">Blog</h1>
-        <p class="text-muted lead mb-0">Latest news and insights from our team.</p>
-    </div>
-
-    <?php if (empty($posts)): ?>
-        <div class="text-center py-5 border rounded-4 bg-white shadow-sm">
-            <i class="bi bi-journal-x display-1 text-muted opacity-25"></i>
-            <p class="mt-3 text-muted">No blog posts have been published yet.</p>
-        </div>
-    <?php else: ?>
-
-        <div class="vstack gap-4">
-            <?php foreach ($posts as $p):
-                $postUrl = "blog-" . htmlspecialchars($p['slug']) . ".html";
-                $content = $p['content'] ?? '';
-                
-                // Reading Time Logic
-                $wordCount = str_word_count(strip_tags($content));
-                $readingTime = ceil($wordCount / 200);
-                if ($readingTime < 1) $readingTime = 1;
-
-                // Excerpt Logic
-                $pos = strpos($content, '</p>');
-                $excerpt = ($pos !== false) ? strip_tags(substr($content, 0, $pos + 4)) : substr(strip_tags($content), 0, 180) . '...';
-            ?>
-
-            <article class="post-card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
-                <div style="height: 4px; background: linear-gradient(90deg, #6610f2, var(--bs-primary));"></div>
-
-                <div class="post-card-header p-4 pb-3">
-                    <h2 class="h4 fw-bold mb-2">
-                        <a href="<?php echo $postUrl; ?>" class="text-decoration-none text-dark link-primary-hover">
-                            <?php echo htmlspecialchars($p['title']); ?>
-                        </a>
-                    </h2>
-                    <div class="meta d-flex align-items-center flex-wrap gap-3">
-                        <span class="text-capitalize small text-muted"><i class="bi bi-person-circle me-1"></i><?php echo htmlspecialchars($p['author'] ?? 'Admin'); ?></span>
-                        <span class="small text-muted"><i class="bi bi-calendar3 me-1"></i><?php echo date('M j, Y', strtotime($p['created_at'])); ?></span>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><?php echo htmlspecialchars($p['category'] ?? 'General'); ?></span>
-                    </div>
-                </div>
-
-                <div class="post-card-body p-4 border-top border-bottom border-light-subtle">
-                    <p class="text-secondary mb-0"><?php echo htmlspecialchars($excerpt); ?></p>
-                </div>
-
-                <div class="post-card-footer px-4 py-3 d-flex justify-content-between align-items-center bg-white">
-                    <div class="text-muted small">
-                        <span class="me-3"><i class="bi bi-clock me-1"></i><?php echo $readingTime; ?> min read</span>
-                        <span><i class="bi bi-chat-left-text me-1"></i>12 comments</span>
-                    </div>
-                    <div>
-                        <a href="<?php echo $postUrl; ?>" class="text-decoration-none fw-bold small d-flex align-items-center link-primary-hover">
-                            Read article <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-            </article>
-
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
 </div>
 
 <?php
-queue_css("
-.post-card {
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
+$blog_sidebar = ob_get_clean();
+set_page_sidebar($blog_sidebar);
 
-.post-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 1rem 2rem rgba(0,0,0,0.12) !important;
-}
+// 3. Pagination
+$per_page     = 10;
+$current_pg   = max(1, (int)($_GET['page'] ?? 1));
+$offset       = ($current_pg - 1) * $per_page;
+$total_posts  = $db->query("SELECT COUNT(*) FROM posts WHERE status='published'")->fetchColumn();
+$total_pages  = ceil($total_posts / $per_page);
 
-.link-primary-hover:hover {
-    color: var(--bs-primary) !important;
-}
-
-.post-card-body p {
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
-
-.meta .badge {
-    font-weight: 500;
-    font-size: 0.75rem;
-}
-");
+$stmt = $db->prepare("SELECT * FROM posts WHERE status='published' ORDER BY created_at DESC LIMIT ? OFFSET ?");
+$stmt->execute([$per_page, $offset]);
+$posts = $stmt->fetchAll();
 ?>
+
+<div class="section-label mb-4">
+    <i class="bi bi-journal-text"></i>
+    All Posts
+    <?php if ($total_posts > 0): ?>
+        <span class="badge" style="margin-left: auto; text-transform: none; letter-spacing: normal;"><?php echo $total_posts; ?> articles</span>
+    <?php endif; ?>
+</div>
+
+<?php if (empty($posts)): ?>
+    <div class="empty-state">
+        <span class="empty-icon"><i class="bi bi-pencil-square"></i></span>
+        <h5>Nothing here yet</h5>
+        <p class="text-small">Posts will appear here once published.</p>
+    </div>
+<?php else: ?>
+    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+        <?php foreach ($posts as $post): ?>
+            <div class="post-card">
+                <div class="post-card-accent"></div>
+                <div class="post-card-body">
+                    <div class="post-meta">
+                        <span><i class="bi bi-calendar3" style="margin-right: 0.3rem;"></i><?php echo date('M j, Y', strtotime($post['created_at'])); ?></span>
+                        <?php if (!empty($post['category'])): ?>
+                            <span><i class="bi bi-tag" style="margin-right: 0.3rem;"></i><?php echo htmlspecialchars($post['category']); ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="post-title">
+                        <a href="blog-<?php echo $post['slug']; ?>.html"><?php echo htmlspecialchars($post['title']); ?></a>
+                    </div>
+                    <?php if (!empty($post['excerpt']) || !empty($post['content'])): ?>
+                        <p class="post-excerpt">
+                            <?php
+                            $text = !empty($post['excerpt']) ? $post['excerpt'] : $post['content'];
+                            echo substr(strip_tags($text), 0, 160) . '&hellip;';
+                            ?>
+                        </p>
+                    <?php endif; ?>
+                    <div style="margin-top: 0.85rem;">
+                        <a href="blog-<?php echo $post['slug']; ?>.html" class="btn btn-ghost btn-sm">
+                            Read more <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <?php if ($total_pages > 1): ?>
+        <nav class="pagination" aria-label="Page navigation">
+            <?php if ($current_pg > 1): ?>
+                <a href="?page=<?php echo $current_pg - 1; ?>"><i class="bi bi-chevron-left"></i></a>
+            <?php endif; ?>
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <?php if ($i == $current_pg): ?>
+                    <span class="current"><?php echo $i; ?></span>
+                <?php else: ?>
+                    <a href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                <?php endif; ?>
+            <?php endfor; ?>
+            <?php if ($current_pg < $total_pages): ?>
+                <a href="?page=<?php echo $current_pg + 1; ?>"><i class="bi bi-chevron-right"></i></a>
+            <?php endif; ?>
+        </nav>
+    <?php endif; ?>
+<?php endif; ?>

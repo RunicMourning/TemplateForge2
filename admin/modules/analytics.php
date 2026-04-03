@@ -98,22 +98,22 @@ for ($i = 6; $i >= 0; $i--) {
     .chart-container { position: relative; height: 180px; }
 </style>
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-end mb-4">
+<div class="">
+    <div class="a-flex gap-2">
         <div>
-            <h2 class="fw-bold mb-0">Dashboard Overview</h2>
-            <p class="text-muted small mb-0">Full Traffic & Referral Intelligence</p>
+            <h2 class="fw-bold">Dashboard Overview</h2>
+            <p class="text-muted">Full Traffic & Referral Intelligence</p>
         </div>
-        <div class="text-end">
-            <span class="badge bg-soft-success text-success border border-success px-3 py-2">
+        <div >
+            <span class="badge">
                 <span class="spinner-grow spinner-grow-sm me-1"></span> Live
             </span>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="a-flex-between flex-wrap gap-2">
         <div class="col-md-3">
-            <div class="card analytics-card shadow-sm p-3 text-center">
+            <div class="a-card">
                 <span class="stat-label">Page Views (Today)</span>
                 <div class="stat-value"><?= number_format($hits_today) ?></div>
                 <div class="trend-indicator <?= $trend >= 0 ? 'text-success' : 'text-danger' ?>">
@@ -122,7 +122,7 @@ for ($i = 6; $i >= 0; $i--) {
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card analytics-card shadow-sm p-3 text-center">
+            <div class="a-card">
                 <span class="stat-label">Bounce Rate</span>
                 <div class="stat-value"><?= $bounce_rate ?>%</div>
                 <div class="progress mt-2 mx-auto" style="height: 4px; width: 80%;">
@@ -131,14 +131,14 @@ for ($i = 6; $i >= 0; $i--) {
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card analytics-card shadow-sm p-3 text-center">
+            <div class="a-card">
                 <span class="stat-label">Unique Visitors</span>
                 <div class="stat-value"><?= number_format($unique_visitors) ?></div>
-                <div class="text-muted small">Lifetime Users</div>
+                <div class="text-muted">Lifetime Users</div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card analytics-card shadow-sm p-3 bg-gradient-primary text-center">
+            <div class="a-card">
                 <span class="stat-label text-white opacity-75">Retention</span>
                 <div class="stat-value text-white"><?= round(($returning_count / max(1, $unique_visitors)) * 100, 1) ?>%</div>
                 <div class="small opacity-75">Returning Visitors</div>
@@ -146,83 +146,83 @@ for ($i = 6; $i >= 0; $i--) {
         </div>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-3 mb-4">
+    <div class="a-flex-between flex-wrap gap-2">
         <div class="col">
-            <div class="card analytics-card shadow-sm p-3 text-center">
-                <h6 class="fw-bold mb-3 small">Browsers</h6>
+            <div class="a-card">
+                <h6 class="fw-bold">Browsers</h6>
                 <canvas id="browserChart"></canvas>
             </div>
         </div>
         <div class="col">
-            <div class="card analytics-card shadow-sm p-3 text-center">
-                <h6 class="fw-bold mb-3 small">Retention</h6>
+            <div class="a-card">
+                <h6 class="fw-bold">Retention</h6>
                 <canvas id="retentionChart"></canvas>
             </div>
         </div>
         <div class="col">
-            <div class="card analytics-card shadow-sm p-3 text-center">
-                <h6 class="fw-bold mb-3 small">Devices</h6>
+            <div class="a-card">
+                <h6 class="fw-bold">Devices</h6>
                 <canvas id="deviceChart"></canvas>
             </div>
         </div>
         <div class="col">
-            <div class="card analytics-card shadow-sm p-3 text-center">
-                <h6 class="fw-bold mb-3 small">Traffic Type</h6>
+            <div class="a-card">
+                <h6 class="fw-bold">Traffic Type</h6>
                 <canvas id="trafficTypeChart"></canvas>
             </div>
         </div>
         <div class="col">
-            <div class="card analytics-card shadow-sm p-3 text-center">
-                <h6 class="fw-bold mb-3 small">Referrer Source</h6>
+            <div class="a-card">
+                <h6 class="fw-bold">Referrer Source</h6>
                 <canvas id="referrerChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="a-flex-between flex-wrap gap-2">
         <div class="col-lg-6">
-            <div class="card analytics-card shadow-sm">
-                <div class="card-header bg-white py-3 border-0">
-                    <h6 class="fw-bold mb-0">7-Day Traffic Trend</h6>
+            <div class="a-card">
+                <div class="a-card">
+                    <h6 class="fw-bold">7-Day Traffic Trend</h6>
                 </div>
-                <div class="card-body"><canvas id="hitsByDay" height="250"></canvas></div>
+                <div class="a-card"><canvas id="hitsByDay" height="250"></canvas></div>
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="card analytics-card shadow-sm">
-                <div class="card-header bg-white py-3 border-0">
-                    <h6 class="fw-bold mb-0">Time of Day Intensity</h6>
+            <div class="a-card">
+                <div class="a-card">
+                    <h6 class="fw-bold">Time of Day Intensity</h6>
                 </div>
-                <div class="card-body"><canvas id="timeOfDayChart" height="250"></canvas></div>
+                <div class="a-card"><canvas id="timeOfDayChart" height="250"></canvas></div>
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="card analytics-card shadow-sm">
-                <div class="card-header bg-white py-3 border-0">
-                    <h6 class="fw-bold mb-0">Peak Activity (Last 24h)</h6>
+            <div class="a-card">
+                <div class="a-card">
+                    <h6 class="fw-bold">Peak Activity (Last 24h)</h6>
                 </div>
-                <div class="card-body"><canvas id="hourlyChart" height="250"></canvas></div>
+                <div class="a-card"><canvas id="hourlyChart" height="250"></canvas></div>
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="card analytics-card shadow-sm">
-                <div class="card-header bg-white py-3 border-0">
-                    <h6 class="fw-bold mb-0">Most Popular Pages</h6>
+            <div class="a-card">
+                <div class="a-card">
+                    <h6 class="fw-bold">Most Popular Pages</h6>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                <div class="a-card">
+                    <div class="">
+                        <table class="">
                             <thead class="bg-light">
                                 <tr>
                                     <th class="ps-4">Path</th>
-                                    <th class="text-end pe-4">Visits</th>
+                                    <th >Visits</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach($top_pages as $page): ?>
                                 <tr>
                                     <td class="ps-4 small text-truncate" style="max-width: 250px;"><?= htmlspecialchars($page['page_url']) ?></td>
-                                    <td class="text-end pe-4 fw-bold"><?= number_format($page['count']) ?></td>
+                                    <td ><?= number_format($page['count']) ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>

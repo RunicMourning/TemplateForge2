@@ -1,0 +1,235 @@
+/*
+ * TemplatForge Theme: Magazine
+ * Colors based on: Bootswatch Vapor
+ *   BG: #1a0933  Body color: #32fbe2 (cyan)
+ *   Primary: #6f42c1 (purple)  Secondary: #ea39b8 (pink)
+ *   Success: #3cf281 (green)  Info: #1ba2f6 (blue)
+ * Layout: sidebar-left narrow rail, full-bleed dark hero
+ * Fonts: Lato + system-ui
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap');
+
+/* ─── Design Tokens (Vapor palette) ───────────────────────────── */
+:root {
+    --tf-bg:          #1a0933;
+    --tf-surface:     #2a1050;
+    --tf-surface-2:   #3a1870;
+    --tf-border:      #4a2480;
+    --tf-text:        #32fbe2;
+    --tf-text-muted:  rgba(50, 251, 226, 0.35);
+    --tf-accent:      #ea39b8;
+    --tf-accent-2:    #6f42c1;
+    --tf-accent-dark: #c020a0;
+    --tf-nav-bg:      #0d0020;
+    --tf-nav-border:  #2a0060;
+    --tf-font-display: 'Lato', system-ui, sans-serif;
+    --tf-font-body:    'Lato', system-ui, sans-serif;
+    --tf-radius:       4px;
+    --tf-radius-lg:    8px;
+    --tf-shadow:       0 4px 24px rgba(234, 57, 184, 0.15);
+    --tf-shadow-sm:    0 2px 8px rgba(111, 66, 193, 0.2);
+}
+
+/* ─── Layout: Magazine, sidebar-left narrow rail ───────────────── */
+
+.container { max-width: 1280px; }
+
+body {
+    background-color: #1a0933;
+    background-color: var(--tf-bg);
+    color: var(--tf-text);
+    --tf-focus-ring: rgba(234, 57, 184, 0.2);
+}
+
+@media (min-width: 1024px) {
+    .site-layout {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 0;
+        align-items: start;
+        padding: 2rem 0;
+    }
+    .site-aside {
+        order: 1;
+        padding: 0 1.5rem 2rem 0;
+        border-right: 1px solid var(--tf-border);
+        position: sticky;
+        top: 5rem;
+        align-self: start;
+        max-height: calc(100vh - 6rem);
+        overflow-y: auto;
+        z-index: 1;
+    }
+    .site-main {
+        order: 2;
+        padding: 0 0 2rem 2.5rem;
+    }
+}
+
+@media (max-width: 1023px) {
+    .site-layout { padding: 1.5rem 0; }
+    .site-main  { padding: 0; }
+    .site-aside { padding: 1.5rem 0; border-bottom: 1px solid var(--tf-border); }
+}
+
+/* ─── Vapor/Cyberpunk Components ───────────────────────────────── */
+
+.site-nav { border-bottom: 1px solid var(--tf-accent); }
+.nav-brand {
+    font-family: 'Lato', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--tf-text);
+}
+.nav-brand i { color: var(--tf-accent); }
+.nav-links a {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(50, 251, 226, 0.6);
+}
+.nav-links a:hover, .nav-links a.active { color: var(--tf-text); background: rgba(234, 57, 184, 0.1); }
+
+/* Hero — cyberpunk banner */
+.hero {
+    background: linear-gradient(135deg, #0d0020 0%, #1a0933 50%, #2a0050 100%);
+    color: var(--tf-text);
+    padding: 4rem 2rem 3rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--tf-accent);
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(234,57,184,0.2) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -80px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(111,66,193,0.2) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero-eyebrow {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--tf-accent);
+    font-style: normal;
+    background: rgba(234,57,184,0.1);
+    border: 1px solid rgba(234,57,184,0.3);
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    margin-bottom: 1.25rem;
+}
+.hero-eyebrow i { color: var(--tf-accent); }
+.hero-title {
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 30px rgba(234, 57, 184, 0.4);
+}
+.hero-title em { color: var(--tf-accent); font-style: italic; }
+.hero-lead { color: rgba(50, 251, 226, 0.75); font-size: 1rem; max-width: 540px; }
+
+.section-label {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--tf-text);
+    border-left: 3px solid var(--tf-accent);
+    padding-left: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.section-label::after { display: none; }
+.section-label i { color: var(--tf-accent); }
+
+.post-card {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--tf-border);
+    box-shadow: none;
+    background: transparent;
+}
+.post-card:hover { transform: none; box-shadow: var(--tf-shadow-sm); background: var(--tf-surface); }
+.post-card-accent { background: var(--tf-accent); width: 3px; }
+.post-title { font-family: 'Lato', sans-serif; font-weight: 700; font-size: 1.1rem; }
+.post-title a { color: var(--tf-text); }
+.post-title a:hover { color: var(--tf-accent); }
+.post-excerpt { color: var(--tf-text-muted); }
+
+.feature-card {
+    border-radius: 0;
+    border: 1px solid var(--tf-border);
+    background: var(--tf-surface);
+    border-top: 3px solid var(--tf-accent);
+    box-shadow: none;
+}
+.feature-card:nth-child(2) { border-top-color: var(--tf-accent-2); }
+.feature-card:nth-child(3) { border-top-color: #1ba2f6; }
+.feature-card .card-accent { display: none; }
+.feature-card-icon { color: var(--tf-accent); border-color: var(--tf-border); background: var(--tf-surface-2); }
+
+.widget-card {
+    border-radius: 0;
+    border: 1px solid var(--tf-border);
+    background: var(--tf-surface);
+    box-shadow: none;
+}
+.widget-card .card-accent { background: linear-gradient(90deg, var(--tf-accent), var(--tf-accent-2)); }
+.widget-title { font-family: 'Lato', sans-serif; font-size: 0.65rem; font-weight: 900; letter-spacing: 0.18em; color: var(--tf-text-muted); }
+
+.badge { border-color: var(--tf-border); color: var(--tf-accent); background: rgba(234,57,184,0.08); border-radius: 100px; }
+
+.btn { font-family: 'Lato', sans-serif; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border-radius: 0; }
+.btn-primary { background: var(--tf-accent); border-color: var(--tf-accent); color: #fff; }
+.btn-primary:hover { background: var(--tf-accent-dark); border-color: var(--tf-accent-dark); color: #fff; }
+.btn-secondary { border-color: var(--tf-text); color: var(--tf-text); background: transparent; }
+.btn-secondary:hover { background: var(--tf-text); color: var(--tf-bg); border-color: var(--tf-text); }
+
+blockquote {
+    border-left: 3px solid var(--tf-accent);
+    background: var(--tf-surface);
+    font-style: normal;
+    color: var(--tf-text);
+    border-radius: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="search"], textarea, select {
+    background: var(--tf-surface);
+    border-color: var(--tf-border);
+    color: var(--tf-text);
+}
+input:focus, textarea:focus, select:focus {
+    border-color: var(--tf-accent);
+    box-shadow: 0 0 0 3px rgba(234, 57, 184, 0.15);
+}
+input::placeholder, textarea::placeholder { color: var(--tf-text-muted); }
+
+.site-footer { border-top: 1px solid var(--tf-accent); }
+.footer-brand { text-shadow: 0 0 20px rgba(234, 57, 184, 0.3); }

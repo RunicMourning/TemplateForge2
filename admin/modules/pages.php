@@ -59,14 +59,14 @@ if (isset($_GET['edit'])) {
 $pages = $db->query("SELECT * FROM pages ORDER BY slug='home' DESC, id DESC")->fetchAll();
 ?>
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="">
+    <div class="a-flex gap-2">
         <div>
-            <h2 class="fw-bold mb-0">Page Manager</h2>
-            <p class="text-muted small mb-0">Edit your website structure and core content</p>
+            <h2 class="fw-bold">Page Manager</h2>
+            <p class="text-muted">Edit your website structure and core content</p>
         </div>
         <?php if (!$show_editor): ?>
-            <a href="index.php?view=pages&action=new" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <a href="index.php?view=pages&action=new" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-2"></i>Create New Page
             </a>
         <?php else: ?>
@@ -79,26 +79,26 @@ $pages = $db->query("SELECT * FROM pages ORDER BY slug='home' DESC, id DESC")->f
     <?php echo $msg; ?>
 
     <?php if ($show_editor): ?>
-        <div class="row g-4 animate__animated animate__fadeIn">
+        <div class="a-flex-between flex-wrap gap-2">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
+                <div class="a-card">
+                    <div class="a-card">
                         <form method="POST" action="index.php?view=pages">
                             <?php echo csrf_input('admin_pages_save'); ?>
                             <?php if ($edit_page): ?>
                                 <input type="hidden" name="page_id" value="<?php echo $edit_page['id']; ?>">
                             <?php endif; ?>
 
-                            <div class="row g-3 mb-4">
+                            <div class="a-flex-between flex-wrap gap-2">
                                 <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-uppercase text-muted">Page Title</label>
-                                    <input type="text" name="title" class="form-control form-control-lg border-0 bg-light rounded-3" placeholder="e.g. About Us" value="<?php echo $edit_page['title'] ?? ''; ?>" required>
+                                    <label class="form-label">Page Title</label>
+                                    <input type="text" name="title" class="" placeholder="e.g. About Us" value="<?php echo $edit_page['title'] ?? ''; ?>" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-uppercase text-muted">Slug</label>
-                                    <div class="input-group input-group-lg">
-                                        <input type="text" name="slug" class="form-control border-0 bg-light rounded-3" placeholder="slug-name" value="<?php echo $edit_page['slug'] ?? ''; ?>" <?php echo ($edit_page && $edit_page['slug'] == 'home') ? 'readonly' : ''; ?> required>
-                                        <span class="input-group-text border-0 bg-light text-muted small">.html</span>
+                                    <label class="form-label">Slug</label>
+                                    <div class="input-group">
+                                        <input type="text" name="slug" class="" placeholder="slug-name" value="<?php echo $edit_page['slug'] ?? ''; ?>" <?php echo ($edit_page && $edit_page['slug'] == 'home') ? 'readonly' : ''; ?> required>
+                                        <span class="input-group">.html</span>
                                     </div>
                                     <?php if ($edit_page && $edit_page['slug'] == 'home'): ?>
                                         <div class="x-small text-info mt-1"><i class="bi bi-info-circle me-1"></i> The homepage slug cannot be changed.</div>
@@ -106,9 +106,9 @@ $pages = $db->query("SELECT * FROM pages ORDER BY slug='home' DESC, id DESC")->f
                                 </div>
 
                                 <div class="col-12">
-                                    <label class="form-label small fw-bold text-uppercase text-muted">Page Content</label>
-<div class="card border-0 bg-white shadow-sm mb-2">
-    <div class="card-body p-2 d-flex flex-wrap gap-1">
+                                    <label class="form-label">Page Content</label>
+<div class="a-card">
+    <div class="a-card">
         <button type="button" class="btn btn-light btn-sm" onclick="wrapText('strong')" title="Bold"><i class="bi bi-type-bold"></i></button>
         <button type="button" class="btn btn-light btn-sm" onclick="wrapText('em')" title="Italic"><i class="bi bi-type-italic"></i></button>
         <button type="button" class="btn btn-light btn-sm" onclick="wrapText('u')" title="Underline"><i class="bi bi-type-underline"></i></button>
@@ -132,22 +132,22 @@ $pages = $db->query("SELECT * FROM pages ORDER BY slug='home' DESC, id DESC")->f
         <button type="button" class="btn btn-light btn-sm" onclick="setAlignment('right')" title="Align Right"><i class="bi bi-text-right"></i></button>
     </div>
 </div>
-                                    <textarea name="content" id="postEditor" rows="18" class="form-control border-0 bg-light rounded-3 font-monospace" oninput="updatePreview()"><?php echo $edit_page['content'] ?? ''; ?></textarea>
+                                    <textarea name="content" id="postEditor" rows="18" class="" oninput="updatePreview()"><?php echo $edit_page['content'] ?? ''; ?></textarea>
                                 </div>
 
-                                <div class="col-12 text-end mt-4">
-                                    <button type="submit" name="save_page" class="btn btn-primary px-5 rounded-pill shadow">Save Page Structure</button>
+                                <div >
+                                    <button type="submit" name="save_page" class="btn btn-primary">Save Page Structure</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4 mt-4 mb-5">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold mb-0 text-muted text-uppercase small">Page Preview</h5>
+                <div class="a-card">
+                    <div class="a-card">
+                        <h5 class="fw-bold">Page Preview</h5>
                     </div>
-                    <div class="card-body p-4">
+                    <div class="a-card">
                         <div id="preview" class="p-4 border rounded-3 bg-white" style="min-height: 200px; color: #333;">
                             <?php echo $edit_page['content'] ?? '<p class="text-muted">Editor content will appear here...</p>'; ?>
                         </div>
@@ -164,55 +164,55 @@ $pages = $db->query("SELECT * FROM pages ORDER BY slug='home' DESC, id DESC")->f
         </div>
 
         <div id="colorPickerOverlay" style="display: none; position: absolute; background-color: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 10px; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-            <input type="color" id="colorPicker" class="form-control form-control-color mb-2" value="#000000">
-            <button type="button" class="btn btn-sm btn-dark w-100" onclick="applyTextColor()">Apply</button>
+            <input type="color" id="colorPicker" class="" value="#000000">
+            <button type="button" class="btn btn-outline btn-sm" onclick="applyTextColor()">Apply</button>
         </div>
 
     <?php else: ?>
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+        <div class="a-card">
+            <div class="">
+                <table class="">
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4 text-muted small text-uppercase py-3">Page Title</th>
-                            <th class="text-muted small text-uppercase py-3">Route / URL</th>
-                            <th class="text-muted small text-uppercase py-3">Status</th>
-                            <th class="text-end pe-4 text-muted small text-uppercase py-3">Action</th>
+                            <th class="text-muted">Route / URL</th>
+                            <th class="text-muted">Status</th>
+                            <th >Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($pages as $p): ?>
                             <tr class="hover-bg-light transition-all">
                                 <td class="ps-4">
-                                    <div class="d-flex align-items-center">
+                                    <div class="a-flex gap-2">
                                         <div class="icon-shape bg-primary-subtle text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
                                             <i class="bi <?php echo ($p['slug'] == 'home') ? 'bi-house-door' : 'bi-file-earmark-text'; ?>"></i>
                                         </div>
-                                        <span class="fw-bold text-dark"><?php echo htmlspecialchars($p['title']); ?></span>
+                                        <span class="fw-bold"><?php echo htmlspecialchars($p['title']); ?></span>
                                     </div>
                                 </td>
                                 <td><code class="text-secondary small">/<?php echo $p['slug']; ?>.html</code></td>
                                 <td>
                                     <?php if($p['slug'] == 'home'): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">System Index</span>
+                                        <span class="badge">System Index</span>
                                     <?php else: ?>
-                                        <span class="badge bg-light text-muted border rounded-pill">Standard Page</span>
+                                        <span class="badge">Standard Page</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="text-end pe-4">
-                                    <a href="index.php?view=pages&edit=<?php echo $p['id']; ?>" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 me-1" title="Edit">
+                                <td >
+                                    <a href="index.php?view=pages&edit=<?php echo $p['id']; ?>" class="btn btn-outline btn-sm" title="Edit">
                                         <i class="bi bi-pencil text-primary"></i>
                                     </a>
                                     <?php if($p['slug'] !== 'home'): ?>
                                         <form method="POST" action="index.php?view=pages" class="d-inline" onsubmit="return confirm('Delete this page permanently?')">
                                             <?php echo csrf_input('admin_pages_delete'); ?>
                                             <input type="hidden" name="delete_page" value="<?php echo (int) $p['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-white border-0 shadow-sm rounded-3 text-danger" title="Delete">
+                                            <button type="submit" class="btn btn-outline btn-sm" title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
                                     <?php else: ?>
-                                        <button class="btn btn-sm btn-white border-0 shadow-sm rounded-3 opacity-50" disabled title="Locked">
+                                        <button class="btn btn-outline btn-sm" disabled title="Locked">
                                             <i class="bi bi-lock"></i>
                                         </button>
                                     <?php endif; ?>

@@ -1,0 +1,133 @@
+/*
+ * TemplatForge Theme: Fieldnotes
+ * Colors based on: Bootswatch Sandstone
+ *   Primary: #325d88 (blue)  Success: #93c54b (green)  Warning: #f47c3c
+ *   BG: #f8f5f0  Text: #3e3f3a  Border: #dfd7ca
+ * Layout: Full-width, NO sidebar, single centered reading column
+ * Fonts: Roboto + system-ui
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
+
+/* ─── Design Tokens (Sandstone palette) ───────────────────────── */
+:root {
+    --tf-bg:          #f8f5f0;
+    --tf-surface:     #ffffff;
+    --tf-surface-2:   #f8f9fa;
+    --tf-border:      #dfd7ca;
+    --tf-text:        #3e3f3a;
+    --tf-text-muted:  #8e8c84;
+    --tf-accent:      #93c54b;
+    --tf-accent-2:    #325d88;
+    --tf-accent-dark: #76a038;
+    --tf-nav-bg:      #3e3f3a;
+    --tf-nav-border:  #2a2b27;
+    --tf-font-display: 'Roboto', system-ui, sans-serif;
+    --tf-font-body:    'Roboto', system-ui, sans-serif;
+    --tf-radius:       4px;
+    --tf-radius-lg:    8px;
+    --tf-shadow:       0 4px 20px rgba(0,0,0,0.07);
+    --tf-shadow-sm:    0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* ─── Layout: Full-width, no sidebar ──────────────────────────── */
+
+.container { max-width: 860px; }
+.container-wide { max-width: 860px; }
+
+.site-aside { display: none !important; }
+.site-layout {
+    grid-template-columns: 1fr !important;
+    gap: 2rem;
+    padding: 3rem 0;
+}
+.site-main { order: 1; max-width: 100%; }
+
+/* ─── Sandstone Components ─────────────────────────────────────── */
+
+.hero {
+    background: var(--tf-surface);
+    border: 1px solid var(--tf-border);
+    border-radius: var(--tf-radius-lg);
+    padding: 3rem;
+    margin-bottom: 3rem;
+    border-bottom: none;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--tf-accent), var(--tf-accent-2));
+}
+.hero-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--tf-accent-2);
+    background: rgba(50, 93, 136, 0.1);
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    border: none;
+    margin-bottom: 1.25rem;
+}
+.hero-title {
+    font-family: 'Roboto', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 300;
+    color: var(--tf-text);
+}
+.hero-title em { color: var(--tf-accent-2); font-style: normal; font-weight: 700; }
+.hero-lead { max-width: 640px; }
+
+.grid-3 { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.feature-card {
+    border-radius: var(--tf-radius-lg);
+    border-left: 4px solid var(--tf-accent-2);
+    border-top: none;
+    box-shadow: var(--tf-shadow-sm);
+}
+.feature-card .card-accent { display: none; }
+.feature-card-icon { color: var(--tf-accent-2); }
+
+.post-card { box-shadow: none; border-radius: var(--tf-radius); }
+.post-card:hover { transform: translateX(4px); box-shadow: var(--tf-shadow-sm); border-color: var(--tf-accent-2); }
+.post-card-accent { background: linear-gradient(to bottom, var(--tf-accent), var(--tf-accent-2)); }
+
+.section-label {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.section-label::after { display: none; }
+.section-label::before {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--tf-border);
+    max-width: 80px;
+    order: -1;
+}
+
+.btn { border-radius: 100px; font-family: 'Roboto', sans-serif; font-weight: 500; }
+.btn-primary { background: var(--tf-accent-2); border-color: var(--tf-accent-2); }
+.btn-primary:hover { background: #244975; border-color: #244975; }
+.btn-secondary { border-color: var(--tf-accent); color: var(--tf-accent-dark); }
+.btn-secondary:hover { background: var(--tf-accent); color: #fff; border-color: var(--tf-accent); }
+
+blockquote {
+    border-left-color: var(--tf-accent-2);
+    background: rgba(50, 93, 136, 0.07);
+    border-radius: 0 var(--tf-radius) var(--tf-radius) 0;
+    font-style: normal;
+    color: var(--tf-text);
+}
+
+.nav-brand { font-family: 'Roboto', sans-serif; font-weight: 300; letter-spacing: 0.05em; }
