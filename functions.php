@@ -167,3 +167,96 @@ if (!function_exists('csrf_input')) {
         return '<input type="hidden" name="csrf_token" value="' . $token . '">';
     }
 }
+
+/**
+ * Social Media Platform Registry
+ * Maps platform slugs to display label, Bootstrap Icon class, and URL pattern.
+ * 'url_prefix' — prepended to the stored value if it doesn't start with http.
+ * 'url_prefix' = '' means the stored value must be a full URL.
+ */
+function tf_social_platforms(): array {
+    return [
+        'twitter'   => ['label' => 'Twitter / X',   'icon' => 'bi-twitter-x',       'url_prefix' => 'https://x.com/'],
+        'facebook'  => ['label' => 'Facebook',       'icon' => 'bi-facebook',         'url_prefix' => 'https://facebook.com/'],
+        'instagram' => ['label' => 'Instagram',      'icon' => 'bi-instagram',        'url_prefix' => 'https://instagram.com/'],
+        'linkedin'  => ['label' => 'LinkedIn',       'icon' => 'bi-linkedin',         'url_prefix' => 'https://linkedin.com/in/'],
+        'youtube'   => ['label' => 'YouTube',        'icon' => 'bi-youtube',          'url_prefix' => 'https://youtube.com/@'],
+        'tiktok'    => ['label' => 'TikTok',         'icon' => 'bi-tiktok',           'url_prefix' => 'https://tiktok.com/@'],
+        'github'    => ['label' => 'GitHub',         'icon' => 'bi-github',           'url_prefix' => 'https://github.com/'],
+        'discord'   => ['label' => 'Discord',        'icon' => 'bi-discord',          'url_prefix' => ''],
+        'twitch'    => ['label' => 'Twitch',         'icon' => 'bi-twitch',           'url_prefix' => 'https://twitch.tv/'],
+        'reddit'    => ['label' => 'Reddit',         'icon' => 'bi-reddit',           'url_prefix' => 'https://reddit.com/u/'],
+        'mastodon'  => ['label' => 'Mastodon',       'icon' => 'bi-mastodon',         'url_prefix' => ''],
+        'bluesky'   => ['label' => 'Bluesky',        'icon' => 'bi-cloud',            'url_prefix' => 'https://bsky.app/profile/'],
+        'pinterest' => ['label' => 'Pinterest',      'icon' => 'bi-pinterest',        'url_prefix' => 'https://pinterest.com/'],
+        'spotify'   => ['label' => 'Spotify',        'icon' => 'bi-spotify',          'url_prefix' => ''],
+        'patreon'   => ['label' => 'Patreon',        'icon' => 'bi-heart-fill',       'url_prefix' => 'https://patreon.com/'],
+        'email'     => ['label' => 'Email',          'icon' => 'bi-envelope-fill',    'url_prefix' => 'mailto:'],
+        'rss'       => ['label' => 'RSS Feed',       'icon' => 'bi-rss-fill',         'url_prefix' => ''],
+        'website'   => ['label' => 'Website',        'icon' => 'bi-globe',            'url_prefix' => ''],
+    ];
+}
+
+/**
+ * Render Social Links
+ * Pulls from social_links table and outputs icon anchor tags.
+ * Call from any template: <?php echo render_social_links($db); ?>
+ */
+function render_social_links($db): string {
+    try {
+        $rows = $db->query(
+            "SELECT platform, value FROM social_links ORDER BY sort_order ASC"
+        )->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        return '';
+    }
+
+    if (empty($rows)) return '';
+
+    $platforms = tf_social_platforms();
+    $out = '<div class="footer-social">';
+    foreach ($rows as $row) {
+        $slug  = $row['platform'];
+        $value = trim($row['value']);
+        if (empty($value) || !isset($platforms[$slug])) continue;
+
+        $p   = $platforms[$slug];
+        $url = (str_starts_with($value, 'http') || str_starts_with($value, 'mailto:') || empty($p['url_prefix']))
+             ? $value
+             : $p['url_prefix'] . ltrim($value, '@/');
+
+        $label = htmlspecialchars($p['label']);
+        $icon  = htmlspecialchars($p['icon']);
+        $href  = htmlspecialchars($url);
+        $out  .= "<a href=\"{$href}\" aria-label=\"{$label}\" target=\"_blank\" rel=\"noopener noreferrer\">"
+               . "<i class=\"bi {$icon}\"></i></a>";
+    }
+    $out .= '</div>';
+    return $out;
+}
+
+/**
+ * Render Footer Links
+ * Pulls from footer_links table and outputs a <ul> of links.
+ * Call from any template: <?php echo render_footer_links($db); ?>
+ */
+function render_footer_links($db): string {
+    try {
+        $rows = $db->query(
+            "SELECT label, url FROM footer_links ORDER BY sort_order ASC"
+        )->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        return '';
+    }
+
+    if (empty($rows)) return '';
+
+    $out = '<ul class="footer-links">';
+    foreach ($rows as $row) {
+        $label = htmlspecialchars($row['label']);
+        $url   = htmlspecialchars($row['url']);
+        $out  .= "<li><a href=\"{$url}\">{$label}</a></li>";
+    }
+    $out .= '</ul>';
+    return $out;
+}

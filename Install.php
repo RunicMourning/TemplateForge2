@@ -109,6 +109,8 @@ if ($installer_locked) {
         $db->exec("CREATE TABLE logs (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, event TEXT, details TEXT, user TEXT, ip TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)");
         $db->exec("CREATE TABLE posts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, slug TEXT UNIQUE, content TEXT, excerpt TEXT, category TEXT, author TEXT, status TEXT DEFAULT 'published', created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
         $db->exec("CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL)");
+        $db->exec("CREATE TABLE social_links (id INTEGER PRIMARY KEY AUTOINCREMENT, platform TEXT NOT NULL, value TEXT NOT NULL, sort_order INTEGER DEFAULT 0)");
+        $db->exec("CREATE TABLE footer_links (id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT NOT NULL, url TEXT NOT NULL, sort_order INTEGER DEFAULT 0)");
 		$db->exec("CREATE TABLE IF NOT EXISTS contact_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender_name TEXT NOT NULL, sender_email TEXT NOT NULL, subject TEXT NOT NULL, message TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
         
         // Analytics with Performance Indexes
