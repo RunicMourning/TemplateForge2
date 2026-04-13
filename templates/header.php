@@ -19,7 +19,7 @@
     ?>
 
     <!-- Bootstrap Icons (no Bootstrap CSS/JS) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
     <!-- Core: base reset, typography, layout primitives -->
     <link rel="stylesheet" href="/themes/core-base.css">
     <!-- Core: components (nav, cards, buttons, forms, hero) -->
@@ -47,7 +47,7 @@ if ($current_page === '' || $current_page === 'index.php') $current_page = 'home
 <nav class="site-nav">
     <div class="container">
         <div class="nav-inner">
-            <a class="nav-brand" href="index.php">
+            <a class="nav-brand" href="/">
                 <i class="bi bi-intersect"></i>
                 <?php echo htmlspecialchars($settings['site_name']); ?>
             </a>

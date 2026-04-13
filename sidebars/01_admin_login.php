@@ -9,6 +9,7 @@ $is_logged_in = isset($_SESSION['user_id']);
 
         <?php if (!$is_logged_in): ?>
             <form method="post" action="admin/index.php">
+                <?php echo csrf_input('admin_login'); ?>
                 <div class="form-group">
                     <div style="position: relative;">
                         <i class="bi bi-person-fill" style="position:absolute; left:0.7rem; top:50%; transform:translateY(-50%); color:var(--tf-text-muted); font-size:0.85rem;"></i>

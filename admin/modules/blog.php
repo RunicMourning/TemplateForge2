@@ -17,7 +17,7 @@ if (isset($_POST['delete_post'])) {
     $stmt = $db->prepare("DELETE FROM posts WHERE id = ?");
     $stmt->execute([$delete_id]);
     log_activity($db, 'CRUD', 'Post Deleted', "ID: " . $delete_id);
-    $msg = "<div class='alert alert-warning border-0 shadow-sm rounded-4'>Post deleted successfully.</div>";
+    $msg = "<div class='alert alert-warning'>Post deleted successfully.</div>";
 }
 
 // --- SAVE/UPDATE LOGIC ---
@@ -45,6 +45,10 @@ if (isset($_POST['save_post'])) {
             $stmt->execute([$title, $slug, $category, $content, $excerpt, $current_user]);
             log_activity($db, 'CRUD', 'Post Created', $title);
             $msg = '<div class="alert alert-success">Post published successfully!</div>';
+        }
+        // Index [[wiki links]] for appears-in tracking
+        if (function_exists('wiki_index_links')) {
+            wiki_index_links($db, $slug, 'post', $content);
         }
         $show_editor = false; 
     } catch (Exception $e) {
@@ -86,130 +90,158 @@ $all_posts = $stmt->fetchAll();
         </div>
         <?php if (!$show_editor): ?>
             <a href="index.php?view=blog&action=new" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-2"></i>Create New Post
+                <i class="bi bi-plus-lg"></i> Create New Post
             </a>
         <?php else: ?>
-            <a href="index.php?view=blog" class="btn btn-light border rounded-pill px-4">
-                <i class="bi bi-arrow-left me-2"></i>Back to List
+            <a href="index.php?view=blog" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to List
             </a>
         <?php endif; ?>
     </div>
 
     <?php echo $msg; ?>
 
+
     <?php if ($show_editor): ?>
-        <div class="a-flex-between flex-wrap gap-2">
-            <div class="col-lg-8">
-                <div class="a-card">
-                    <div class="a-card">
+        <?php
+        // Fetch categories from DB for the dropdown
+        $blog_categories = [];
+        try {
+            $blog_categories = $db->query("SELECT name FROM categories ORDER BY name ASC")->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Exception $e) {}
+        if (empty($blog_categories)) $blog_categories = ['General'];
+        ?>
+        <div class="editor-layout">
+
+            <!-- Left: form + preview -->
+            <div class="editor-main">
+                <div class="a-card mb-3">
+                    <div class="a-card-header">
+                        <div class="a-card-title"><i class="bi bi-pencil" style="color:var(--a-accent);"></i> Post Details</div>
+                    </div>
+                    <div class="a-card-body">
                         <form method="POST" action="index.php?view=blog" id="postForm">
                             <?php echo csrf_input('admin_blog_save'); ?>
-                            <?php if($edit_post): ?>
-                                <input type="hidden" name="post_id" value="<?php echo $edit_post['id']; ?>">
+                            <?php if ($edit_post): ?>
+                                <input type="hidden" name="post_id" value="<?php echo (int)$edit_post['id']; ?>">
                             <?php endif; ?>
 
-                            <div class="a-flex-between flex-wrap gap-2">
-                                <div class="col-md-8">
-                                    <label class="form-label">Post Title</label>
-                                    <input type="text" name="title" class="" placeholder="Enter catchy title..." value="<?php echo $edit_post['title'] ?? ''; ?>" required>
+                            <!-- Title + Category -->
+                            <div class="field-row">
+                                <div class="form-group mb-0">
+                                    <label>Post Title</label>
+                                    <input type="text" name="title" placeholder="Enter catchy title..." value="<?php echo htmlspecialchars($edit_post['title'] ?? ''); ?>" required>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Category</label>
-                                    <select name="category" class="">
-                                        <option value="General" <?php echo ($edit_post['category'] ?? '') == 'General' ? 'selected' : ''; ?>>General</option>
-                                        <option value="News" <?php echo ($edit_post['category'] ?? '') == 'News' ? 'selected' : ''; ?>>News</option>
-                                        <option value="Tutorial" <?php echo ($edit_post['category'] ?? '') == 'Tutorial' ? 'selected' : ''; ?>>Tutorial</option>
+                                <div class="form-group mb-0">
+                                    <label>Category</label>
+                                    <select name="category">
+                                        <?php foreach ($blog_categories as $cat): ?>
+                                        <option value="<?php echo htmlspecialchars($cat); ?>" <?php echo ($edit_post['category'] ?? 'General') === $cat ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($cat); ?>
+                                        </option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
-                            
-                            <div class="mb-2">
-                                <label class="form-label">URL Slug</label>
-                                <div class="input-group">
-                                    <span class="input-group">/blog-</span>
-                                    <input type="text" name="slug" class="" placeholder="url-path" value="<?php echo $edit_post['slug'] ?? ''; ?>" required>
-                                    <span class="input-group">.html</span>
+
+                            <!-- Slug -->
+                            <div class="form-group">
+                                <label>URL Slug</label>
+                                <div class="slug-group">
+                                    <span>/blog-</span>
+                                    <input type="text" name="slug" placeholder="url-path" value="<?php echo htmlspecialchars($edit_post['slug'] ?? ''); ?>" required>
+                                    <span>.html</span>
                                 </div>
                             </div>
 
-                            <div class="mb-2">
-                                <label class="form-label">Content Editor</label>
-<div class="a-card">
-    <div class="a-card">
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('strong')" title="Bold"><i class="bi bi-type-bold"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('em')" title="Italic"><i class="bi bi-type-italic"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('u')" title="Underline"><i class="bi bi-type-underline"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('del')" title="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
-        
-        <div class="vr mx-1"></div>
-        
-        <button type="button" class="btn btn-light btn-sm" onclick="insertSnippet('ul')" title="Unordered List"><i class="bi bi-list-ul"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="insertSnippet('ol')" title="Ordered List"><i class="bi bi-list-ol"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('blockquote')" title="Quote"><i class="bi bi-quote"></i></button>
-        
-        <div class="vr mx-1"></div>
-        
-        <button type="button" class="btn btn-light btn-sm" onclick="insertLink()" title="Insert Link"><i class="bi bi-link-45deg"></i></button>
-        <button type="button" class="btn btn-light btn-sm btn-color-picker" onclick="showColorPicker(this)" title="Text Color"><i class="bi bi-palette"></i></button>
-        
-        <div class="vr mx-1"></div>
-        
-        <button type="button" class="btn btn-light btn-sm" onclick="setAlignment('left')" title="Align Left"><i class="bi bi-text-left"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="setAlignment('center')" title="Align Center"><i class="bi bi-text-center"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="setAlignment('right')" title="Align Right"><i class="bi bi-text-right"></i></button>
-    </div>
-</div>
-                                <textarea name="content" id="postEditor" rows="15" class="" oninput="updatePreview()"><?php echo $edit_post['content'] ?? ''; ?></textarea>
+                            <!-- Content editor -->
+                            <div class="form-group mb-0">
+                                <label>Content Editor</label>
+                                <div class="editor-toolbar">
+                                    <button type="button" class="btn-tool" onclick="wrapText('strong')" title="Bold"><i class="bi bi-type-bold"></i></button>
+                                    <button type="button" class="btn-tool" onclick="wrapText('em')" title="Italic"><i class="bi bi-type-italic"></i></button>
+                                    <button type="button" class="btn-tool" onclick="wrapText('u')" title="Underline"><i class="bi bi-type-underline"></i></button>
+                                    <button type="button" class="btn-tool" onclick="wrapText('del')" title="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
+                                    <div class="tool-sep"></div>
+                                    <button type="button" class="btn-tool" onclick="insertSnippet('ul')" title="Unordered List"><i class="bi bi-list-ul"></i></button>
+                                    <button type="button" class="btn-tool" onclick="insertSnippet('ol')" title="Ordered List"><i class="bi bi-list-ol"></i></button>
+                                    <button type="button" class="btn-tool" onclick="wrapText('blockquote')" title="Quote"><i class="bi bi-quote"></i></button>
+                                    <div class="tool-sep"></div>
+                                    <button type="button" class="btn-tool" onclick="insertLink()" title="Insert Link"><i class="bi bi-link-45deg"></i></button>
+                                    <button type="button" class="btn-tool btn-color-picker" onclick="showColorPicker(this)" title="Text Color"><i class="bi bi-palette"></i></button>
+                                    <div class="tool-sep"></div>
+                                    <?php if (function_exists('wiki_autocomplete_response')): ?>
+                                    <div style="position:relative;display:inline-block;">
+                                        <button type="button" class="btn-tool" onclick="toggleWikiPicker()" title="Insert Wiki Link" style="color:var(--a-accent);"><i class="bi bi-journal-bookmark"></i></button>
+                                        <div id="wikiPicker" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:200;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius-lg);box-shadow:var(--a-shadow-lg);min-width:240px;">
+                                            <div style="padding:0.5rem;"><input type="text" id="wikiSearch" placeholder="Search wiki entries…" style="width:100%;font-size:0.85rem;" oninput="wikiSearchFn(this.value)"></div>
+                                            <div id="wikiResults" style="max-height:200px;overflow-y:auto;"></div>
+                                        </div>
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="tool-sep"></div>
+                                    <button type="button" class="btn-tool" onclick="setAlignment('left')" title="Align Left"><i class="bi bi-text-left"></i></button>
+                                    <button type="button" class="btn-tool" onclick="setAlignment('center')" title="Align Center"><i class="bi bi-text-center"></i></button>
+                                    <button type="button" class="btn-tool" onclick="setAlignment('right')" title="Align Right"><i class="bi bi-text-right"></i></button>
+                                </div>
+                                <textarea name="content" id="postEditor" class="editor-textarea" oninput="updatePreview()"><?php echo htmlspecialchars($edit_post['content'] ?? ''); ?></textarea>
                             </div>
 
-                            <div class="d-grid d-md-flex justify-content-md-end gap-2">
-                                <button type="submit" name="save_post" class="btn btn-primary">Save & Publish Post</button>
+                            <div style="margin-top:1rem; text-align:right;">
+                                <button type="submit" name="save_post" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Save &amp; Publish Post
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
+                <!-- Live preview -->
                 <div class="a-card">
-                    <div class="a-card">
-                        <h5 class="fw-bold">Live Preview</h5>
+                    <div class="a-card-header">
+                        <div class="a-card-title"><i class="bi bi-eye" style="color:var(--a-accent);"></i> Live Preview</div>
                     </div>
-                    <div class="a-card">
-                        <div id="preview" class="p-3 border rounded-3 bg-white" style="min-height: 150px;">
-                            <?php echo $edit_post['content'] ?? ''; ?>
+                    <div class="a-card-body">
+                        <div id="preview" class="editor-preview">
+                            <?php echo $edit_post['content'] ?? '<span style="color:#aaa;">Editor content will appear here...</span>'; ?>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-4">
-                <?php 
+
+            <!-- Right: media widget -->
+            <div class="editor-sidebar">
+                <?php
                     $context_id = 'blog_' . ($edit_post['id'] ?? 'new');
-                    include 'includes/media_widget.php'; 
+                    include 'includes/media_widget.php';
                 ?>
             </div>
+
         </div>
 
-        <div id="colorPickerOverlay" style="display: none; position: absolute; background-color: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 10px; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-            <input type="color" id="colorPicker" class="" value="#000000">
-            <button type="button" class="btn btn-outline btn-sm" onclick="applyTextColor()">Apply</button>
+        <!-- Color picker overlay -->
+        <div id="colorPickerOverlay" class="color-picker-overlay">
+            <input type="color" id="colorPicker" value="#000000">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="applyTextColor()">Apply</button>
         </div>
+
 
     <?php else: ?>
         <div class="a-card">
             <div class="a-card">
                 <form method="GET" class="a-flex-between flex-wrap gap-2">
                     <input type="hidden" name="view" value="blog">
-                    <div class="col-md-4">
+                    <div style="flex:1;">
                         <div class="input-group">
                             <span class="input-group"><i class="bi bi-search text-muted"></i></span>
                             <input type="text" name="s" class="" placeholder="Search articles..." value="<?php echo htmlspecialchars($search); ?>">
                         </div>
                     </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-light border-0 px-4">Filter</button>
+                    <div style="flex-shrink:0;">
+                        <button type="submit" class="btn btn-ghost btn-sm">Filter</button>
                     </div>
                     <?php if($search): ?>
-                        <div class="col-auto">
+                        <div style="flex-shrink:0;">
                             <a href="index.php?view=blog" class="text-muted">Clear Search</a>
                         </div>
                     <?php endif; ?>
@@ -217,7 +249,7 @@ $all_posts = $stmt->fetchAll();
             </div>
             <div class="">
                 <table class="">
-                    <thead class="bg-light">
+                    <thead >
                         <tr>
                             <th class="ps-4 text-muted small text-uppercase py-3">Article</th>
                             <th class="text-muted">Category</th>
@@ -231,7 +263,7 @@ $all_posts = $stmt->fetchAll();
                             <tr><td colspan="5" class="text-center">No blog posts found.</td></tr>
                         <?php endif; ?>
                         <?php foreach($all_posts as $p): ?>
-                        <tr class="hover-bg-light transition-all">
+                        <tr class="">
                             <td class="ps-4">
                                 <div class="fw-bold"><?php echo htmlspecialchars($p['title']); ?></div>
                                 <div class="text-muted">/blog-<?php echo $p['slug']; ?>.html</div>
@@ -239,7 +271,7 @@ $all_posts = $stmt->fetchAll();
                             <td><span class="badge"><?php echo $p['category'] ?? 'General'; ?></span></td>
                             <td>
                                 <div class="a-flex gap-2">
-                                    <div class="bg-secondary-subtle rounded-circle d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px;">
+                                    <div style="width:24px;height:24px;background:var(--a-surface-2);border:1px solid var(--a-border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:0.5rem;">
                                         <i class="bi bi-person text-secondary" style="font-size: 0.8rem;"></i>
                                     </div>
                                     <span class="small"><?php echo htmlspecialchars($p['author']); ?></span>
@@ -267,10 +299,10 @@ $all_posts = $stmt->fetchAll();
             <?php if($pages_total > 1): ?>
             <div class="a-card">
                 <nav>
-                    <ul class="pagination pagination-sm mb-0 justify-content-center">
+                    <ul class="pagination" style="justify-content:center;">
                         <?php for($i=1; $i<=$pages_total; $i++): ?>
                             <li class="page-item <?php echo ($i == $page_num) ? 'active' : ''; ?> mx-1">
-                                <a class="page-link rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" href="index.php?view=blog&p=<?php echo $i; ?>&s=<?php echo urlencode($search); ?>"><?php echo $i; ?></a>
+                                <a class="" href="index.php?view=blog&p=<?php echo $i; ?>&s=<?php echo urlencode($search); ?>"><?php echo $i; ?></a>
                             </li>
                         <?php endfor; ?>
                     </ul>
@@ -351,15 +383,46 @@ function applyTextColor() {
     document.getElementById("colorPickerOverlay").style.display = "none";
     updatePreview();
 }
+
+// Wiki link picker
+let wikiPickerOpen = false;
+function toggleWikiPicker() {
+    const p = document.getElementById('wikiPicker');
+    if (!p) return;
+    wikiPickerOpen = !wikiPickerOpen;
+    p.style.display = wikiPickerOpen ? 'block' : 'none';
+    if (wikiPickerOpen) { document.getElementById('wikiSearch').focus(); wikiSearchFn(''); }
+}
+let wikiTimer = null;
+function wikiSearchFn(q) {
+    clearTimeout(wikiTimer);
+    wikiTimer = setTimeout(() => {
+        fetch(`index.php?wiki_autocomplete=${encodeURIComponent(q)}`)
+            .then(r => r.json()).then(titles => {
+                const box = document.getElementById('wikiResults');
+                if (!box) return;
+                if (!titles.length) { box.innerHTML = '<div style="padding:0.5rem 0.75rem;font-size:0.8rem;color:#aaa;">No entries found</div>'; return; }
+                box.innerHTML = titles.map(t =>
+                    `<div style="padding:0.45rem 0.75rem;font-size:0.85rem;cursor:pointer;border-bottom:1px solid var(--a-border);"
+                          onmouseover="this.style.background='var(--a-surface-2)'" onmouseout="this.style.background=''"
+                          onclick="insertWikiLink('${t.replace(/'/g,"\\'")}')">
+                        <i class="bi bi-journal-bookmark" style="opacity:0.4;margin-right:0.4rem;"></i>${t}
+                    </div>`
+                ).join('');
+            }).catch(() => {});
+    }, 200);
+}
+function insertWikiLink(title) {
+    const s = textArea.selectionStart;
+    textArea.value = textArea.value.substring(0, s) + `[[${title}]]` + textArea.value.substring(textArea.selectionEnd);
+    updatePreview(); toggleWikiPicker(); textArea.focus();
+}
+document.addEventListener('click', e => {
+    if (wikiPickerOpen && !e.target.closest('#wikiPicker') && !e.target.closest('.btn-tool')) {
+        wikiPickerOpen = false;
+        const p = document.getElementById('wikiPicker');
+        if (p) p.style.display = 'none';
+    }
+});
 </script>
 
-<style>
-    .x-small { font-size: 0.72rem; }
-    .transition-all { transition: all 0.2s ease-in-out; }
-    .hover-bg-light:hover { background-color: #fbfbfb; }
-    .pagination .page-link { border: none; color: #6c757d; font-weight: 500; }
-    .pagination .page-item.active .page-link { background-color: #0d6efd; color: white; }
-    .btn-white { background: #fff; }
-    #preview { font-family: inherit; line-height: 1.6; }
-    .btn-group .btn { border-color: #eee; }
-</style>

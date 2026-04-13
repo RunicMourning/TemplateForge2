@@ -58,10 +58,10 @@ $colors = [
     <div class="a-card">
         <form method="GET" action="index.php" class="a-flex-between flex-wrap gap-2">
             <input type="hidden" name="view" value="logs">
-            <div class="col-auto">
-                <label for="cat" class="col-form-label">Filter by Category:</label>
+            <div>
+                <label for="cat" style="font-size:0.875rem; font-weight:600; white-space:nowrap; align-self:center;">Filter by Category:</label>
             </div>
-            <div class="col-auto">
+            <div>
                 <select name="cat" id="cat" class="" onchange="this.form.submit()">
                     <option value="">All Categories</option>
                     <?php foreach ($categories as $cat): ?>
@@ -72,7 +72,7 @@ $colors = [
                 </select>
             </div>
             <?php if($filter): ?>
-                <div class="col-auto">
+                <div>
                     <a href="index.php?view=logs" class="link-secondary small">Clear Filter</a>
                 </div>
             <?php endif; ?>

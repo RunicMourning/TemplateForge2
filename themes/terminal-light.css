@@ -37,8 +37,8 @@ body {
     --tf-focus-ring: rgba(42, 159, 214, 0.2);
 }
 
-.container { max-width: 900px; }
-.container-wide { max-width: 900px; }
+.container { max-width: 1600px; }
+.container-wide { max-width: 1600px; }
 .site-aside { display: none !important; }
 .site-layout { grid-template-columns: 1fr !important; padding: 2rem 0; gap: 2rem; }
 .site-main { order: 1; }

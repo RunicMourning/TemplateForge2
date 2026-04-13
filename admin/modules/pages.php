@@ -21,15 +21,15 @@ if (isset($_POST['save_page'])) {
         $stmt = $db->prepare("UPDATE pages SET title = ?, slug = ?, content = ? WHERE id = ?");
         $stmt->execute([$title, $slug, $content, $id]);
         log_activity($db, 'CRUD', 'Page Edited', "Title: $title");
-        $msg = "<div class='alert alert-success border-0 shadow-sm rounded-4'>Page updated successfully!</div>";
+        $msg = "<div class='alert alert-success'>Page updated successfully!</div>";
     } else {
         try {
             $stmt = $db->prepare("INSERT INTO pages (title, slug, content) VALUES (?, ?, ?)");
             $stmt->execute([$title, $slug, $content]);
             log_activity($db, 'CRUD', 'Page Created', "Title: $title");
-            $msg = "<div class='alert alert-success border-0 shadow-sm rounded-4'>New page published!</div>";
+            $msg = "<div class='alert alert-success'>New page published!</div>";
         } catch (Exception $e) {
-            $msg = "<div class='alert alert-danger border-0 shadow-sm rounded-4'>Error: Slug must be unique.</div>";
+            $msg = "<div class='alert alert-danger'>Error: Slug must be unique.</div>";
         }
     }
     $show_editor = false; 
@@ -45,7 +45,7 @@ if (isset($_POST['delete_page'])) {
     $delete_id = (int) ($_POST['delete_page'] ?? 0);
     $db->prepare("DELETE FROM pages WHERE id = ? AND slug != 'home'")->execute([$delete_id]);
     log_activity($db, 'CRUD', 'Page Deleted', "ID: " . $delete_id);
-    $msg = "<div class='alert alert-warning border-0 shadow-sm rounded-4'>Page removed.</div>";
+    $msg = "<div class='alert alert-warning'>Page removed.</div>";
 }
 
 // 3. Fetch Edit Data
@@ -63,129 +63,138 @@ $pages = $db->query("SELECT * FROM pages ORDER BY slug='home' DESC, id DESC")->f
     <div class="a-flex gap-2">
         <div>
             <h2 class="fw-bold">Page Manager</h2>
-            <p class="text-muted">Edit your website structure and core content</p>
+            <p >Edit your website structure and core content</p>
         </div>
         <?php if (!$show_editor): ?>
             <a href="index.php?view=pages&action=new" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-2"></i>Create New Page
+                <i class="bi bi-plus-lg"></i> Create New Page
             </a>
         <?php else: ?>
-            <a href="index.php?view=pages" class="btn btn-light border rounded-pill px-4">
-                <i class="bi bi-arrow-left me-2"></i>Back to List
+            <a href="index.php?view=pages" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to List
             </a>
         <?php endif; ?>
     </div>
     
     <?php echo $msg; ?>
 
+
     <?php if ($show_editor): ?>
-        <div class="a-flex-between flex-wrap gap-2">
-            <div class="col-lg-8">
-                <div class="a-card">
-                    <div class="a-card">
+        <div class="editor-layout">
+
+            <!-- Left: form + preview -->
+            <div class="editor-main">
+                <div class="a-card mb-3">
+                    <div class="a-card-header">
+                        <div class="a-card-title"><i class="bi bi-file-earmark-text" style="color:var(--a-accent);"></i> Page Details</div>
+                    </div>
+                    <div class="a-card-body">
                         <form method="POST" action="index.php?view=pages">
                             <?php echo csrf_input('admin_pages_save'); ?>
                             <?php if ($edit_page): ?>
-                                <input type="hidden" name="page_id" value="<?php echo $edit_page['id']; ?>">
+                                <input type="hidden" name="page_id" value="<?php echo (int)$edit_page['id']; ?>">
                             <?php endif; ?>
 
-                            <div class="a-flex-between flex-wrap gap-2">
-                                <div class="col-md-6">
-                                    <label class="form-label">Page Title</label>
-                                    <input type="text" name="title" class="" placeholder="e.g. About Us" value="<?php echo $edit_page['title'] ?? ''; ?>" required>
+                            <!-- Title + Slug -->
+                            <div class="field-row">
+                                <div class="form-group mb-0">
+                                    <label>Page Title</label>
+                                    <input type="text" name="title" placeholder="e.g. About Us" value="<?php echo htmlspecialchars($edit_page['title'] ?? ''); ?>" required>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Slug</label>
-                                    <div class="input-group">
-                                        <input type="text" name="slug" class="" placeholder="slug-name" value="<?php echo $edit_page['slug'] ?? ''; ?>" <?php echo ($edit_page && $edit_page['slug'] == 'home') ? 'readonly' : ''; ?> required>
-                                        <span class="input-group">.html</span>
+                                <div class="form-group mb-0">
+                                    <label>Slug</label>
+                                    <div class="slug-group">
+                                        <input type="text" name="slug" placeholder="slug-name"
+                                               value="<?php echo htmlspecialchars($edit_page['slug'] ?? ''); ?>"
+                                               <?php echo ($edit_page && $edit_page['slug'] === 'home') ? 'readonly' : ''; ?>
+                                               required>
+                                        <span>.html</span>
                                     </div>
-                                    <?php if ($edit_page && $edit_page['slug'] == 'home'): ?>
-                                        <div class="x-small text-info mt-1"><i class="bi bi-info-circle me-1"></i> The homepage slug cannot be changed.</div>
+                                    <?php if ($edit_page && $edit_page['slug'] === 'home'): ?>
+                                    <div class="form-help"><i class="bi bi-info-circle"></i> The homepage slug cannot be changed.</div>
                                     <?php endif; ?>
                                 </div>
+                            </div>
 
-                                <div class="col-12">
-                                    <label class="form-label">Page Content</label>
-<div class="a-card">
-    <div class="a-card">
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('strong')" title="Bold"><i class="bi bi-type-bold"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('em')" title="Italic"><i class="bi bi-type-italic"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('u')" title="Underline"><i class="bi bi-type-underline"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('del')" title="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
-        
-        <div class="vr mx-1"></div>
-        
-        <button type="button" class="btn btn-light btn-sm" onclick="insertSnippet('ul')" title="Unordered List"><i class="bi bi-list-ul"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="insertSnippet('ol')" title="Ordered List"><i class="bi bi-list-ol"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="wrapText('blockquote')" title="Quote"><i class="bi bi-quote"></i></button>
-        
-        <div class="vr mx-1"></div>
-        
-        <button type="button" class="btn btn-light btn-sm" onclick="insertLink()" title="Insert Link"><i class="bi bi-link-45deg"></i></button>
-        <button type="button" class="btn btn-light btn-sm btn-color-picker" onclick="showColorPicker(this)" title="Text Color"><i class="bi bi-palette"></i></button>
-        
-        <div class="vr mx-1"></div>
-        
-        <button type="button" class="btn btn-light btn-sm" onclick="setAlignment('left')" title="Align Left"><i class="bi bi-text-left"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="setAlignment('center')" title="Align Center"><i class="bi bi-text-center"></i></button>
-        <button type="button" class="btn btn-light btn-sm" onclick="setAlignment('right')" title="Align Right"><i class="bi bi-text-right"></i></button>
-    </div>
-</div>
-                                    <textarea name="content" id="postEditor" rows="18" class="" oninput="updatePreview()"><?php echo $edit_page['content'] ?? ''; ?></textarea>
+                            <!-- Content editor -->
+                            <div class="form-group mb-0">
+                                <label>Page Content</label>
+                                <div class="editor-toolbar">
+                                    <button type="button" class="btn-tool" onclick="wrapText('strong')" title="Bold"><i class="bi bi-type-bold"></i></button>
+                                    <button type="button" class="btn-tool" onclick="wrapText('em')" title="Italic"><i class="bi bi-type-italic"></i></button>
+                                    <button type="button" class="btn-tool" onclick="wrapText('u')" title="Underline"><i class="bi bi-type-underline"></i></button>
+                                    <button type="button" class="btn-tool" onclick="wrapText('del')" title="Strikethrough"><i class="bi bi-type-strikethrough"></i></button>
+                                    <div class="tool-sep"></div>
+                                    <button type="button" class="btn-tool" onclick="insertSnippet('ul')" title="Unordered List"><i class="bi bi-list-ul"></i></button>
+                                    <button type="button" class="btn-tool" onclick="insertSnippet('ol')" title="Ordered List"><i class="bi bi-list-ol"></i></button>
+                                    <button type="button" class="btn-tool" onclick="wrapText('blockquote')" title="Quote"><i class="bi bi-quote"></i></button>
+                                    <div class="tool-sep"></div>
+                                    <button type="button" class="btn-tool" onclick="insertLink()" title="Insert Link"><i class="bi bi-link-45deg"></i></button>
+                                    <button type="button" class="btn-tool btn-color-picker" onclick="showColorPicker(this)" title="Text Color"><i class="bi bi-palette"></i></button>
+                                    <div class="tool-sep"></div>
+                                    <button type="button" class="btn-tool" onclick="setAlignment('left')" title="Align Left"><i class="bi bi-text-left"></i></button>
+                                    <button type="button" class="btn-tool" onclick="setAlignment('center')" title="Align Center"><i class="bi bi-text-center"></i></button>
+                                    <button type="button" class="btn-tool" onclick="setAlignment('right')" title="Align Right"><i class="bi bi-text-right"></i></button>
                                 </div>
+                                <textarea name="content" id="postEditor" class="editor-textarea" oninput="updatePreview()"><?php echo htmlspecialchars($edit_page['content'] ?? ''); ?></textarea>
+                            </div>
 
-                                <div >
-                                    <button type="submit" name="save_page" class="btn btn-primary">Save Page Structure</button>
-                                </div>
+                            <div style="margin-top:1rem; text-align:right;">
+                                <button type="submit" name="save_page" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Save Page Structure
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
+                <!-- Page preview -->
                 <div class="a-card">
-                    <div class="a-card">
-                        <h5 class="fw-bold">Page Preview</h5>
+                    <div class="a-card-header">
+                        <div class="a-card-title"><i class="bi bi-eye" style="color:var(--a-accent);"></i> Page Preview</div>
                     </div>
-                    <div class="a-card">
-                        <div id="preview" class="p-4 border rounded-3 bg-white" style="min-height: 200px; color: #333;">
-                            <?php echo $edit_page['content'] ?? '<p class="text-muted">Editor content will appear here...</p>'; ?>
+                    <div class="a-card-body">
+                        <div id="preview" class="editor-preview">
+                            <?php echo $edit_page['content'] ?? '<span style="color:#aaa;">Editor content will appear here...</span>'; ?>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <?php 
-                    $context_id = 'page_' . ($edit_page['id'] ?? 'new'); 
-                    include 'includes/media_widget.php'; 
+            <!-- Right: media widget -->
+            <div class="editor-sidebar">
+                <?php
+                    $context_id = 'page_' . ($edit_page['id'] ?? 'new');
+                    include 'includes/media_widget.php';
                 ?>
             </div>
+
         </div>
 
-        <div id="colorPickerOverlay" style="display: none; position: absolute; background-color: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 10px; z-index: 999; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-            <input type="color" id="colorPicker" class="" value="#000000">
-            <button type="button" class="btn btn-outline btn-sm" onclick="applyTextColor()">Apply</button>
+        <!-- Color picker overlay -->
+        <div id="colorPickerOverlay" class="color-picker-overlay">
+            <input type="color" id="colorPicker" value="#000000">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="applyTextColor()">Apply</button>
         </div>
 
     <?php else: ?>
         <div class="a-card">
             <div class="">
                 <table class="">
-                    <thead class="bg-light">
+                    <thead >
                         <tr>
-                            <th class="ps-4 text-muted small text-uppercase py-3">Page Title</th>
-                            <th class="text-muted">Route / URL</th>
-                            <th class="text-muted">Status</th>
+                            <th style="padding-left:1.5rem;">Page Title</th>
+                            <th >Route / URL</th>
+                            <th >Status</th>
                             <th >Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($pages as $p): ?>
-                            <tr class="hover-bg-light transition-all">
-                                <td class="ps-4">
+                            <tr class="">
+                                <td style="padding-left:1.5rem;">
                                     <div class="a-flex gap-2">
-                                        <div class="icon-shape bg-primary-subtle text-primary rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                        <div style="width:35px;height:35px;background:var(--a-surface-2);border:1px solid var(--a-border);border-radius:var(--a-radius);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--a-accent);">
                                             <i class="bi <?php echo ($p['slug'] == 'home') ? 'bi-house-door' : 'bi-file-earmark-text'; ?>"></i>
                                         </div>
                                         <span class="fw-bold"><?php echo htmlspecialchars($p['title']); ?></span>
@@ -232,7 +241,7 @@ const preview = document.getElementById("preview");
 
 function updatePreview() {
     if (textArea && preview) {
-        preview.innerHTML = textArea.value || '<p class="text-muted">Editor content will appear here...</p>';
+        preview.innerHTML = textArea.value || '<p >Editor content will appear here...</p>';
     }
 }
 
@@ -299,13 +308,3 @@ function applyTextColor() {
 }
 </script>
 
-<style>
-    .x-small { font-size: 0.72rem; }
-    .transition-all { transition: all 0.2s ease-in-out; }
-    .hover-bg-light:hover { background-color: #fbfbfb; }
-    .btn-white { background: #fff; }
-    .rounded-4 { border-radius: 1rem !important; }
-    .icon-shape { flex-shrink: 0; }
-    #preview img { max-width: 100%; height: auto; border-radius: 8px; }
-    #preview blockquote { border-left: 4px solid #dee2e6; padding-left: 1rem; color: #6c757d; }
-</style>

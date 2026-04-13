@@ -40,8 +40,8 @@
 
 /* ─── Layout: Full-width, no sidebar ──────────────────────────── */
 
-.container { max-width: 860px; }
-.container-wide { max-width: 860px; }
+.container { max-width: 1600px; }
+.container-wide { max-width: 1600px; }
 
 .site-aside { display: none !important; }
 .site-layout {

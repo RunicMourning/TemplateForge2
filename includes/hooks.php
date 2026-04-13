@@ -1,77 +1,120 @@
 <?php
 /**
- * Hook Engine for CMS Addons - Superglobal Version
+ * TemplateForge2 Hook Engine
+ *
+ * Action hooks  — fire side effects, pass context to callbacks.
+ *   add_hook($name, $callback)
+ *   run_hook($name, ...$args)
+ *
+ * Filter hooks  — intercept a value, return a modified version.
+ *   add_filter($name, $callback, $priority = 10)
+ *   apply_filter($name, $value, ...$args)
+ *
+ * Settings sections (addon API, unchanged):
+ *   register_settings_section($id, $section)
+ *   get_registered_settings_sections()
  */
 
-// 1. Initialize the storage in the master global array
-$GLOBALS['registered_hooks'] = [];
+$GLOBALS['registered_hooks']            = [];
+$GLOBALS['registered_filters']          = [];
 $GLOBALS['registered_settings_sections'] = [];
 
+// ─── Action Hooks ─────────────────────────────────────────────────────────────
+
 /**
- * Registers a function or HTML string to a specific hook location.
- * Uses $GLOBALS to ensure cross-file persistence.
+ * Register a callback on an action hook.
+ *
+ * @param string   $hook_name
+ * @param callable $callback  Receives any args passed to run_hook().
  */
-function add_hook($hook_name, $callback) {
+function add_hook(string $hook_name, callable $callback): void {
     $GLOBALS['registered_hooks'][$hook_name][] = $callback;
 }
 
 /**
- * Executes all items registered to a specific hook.
+ * Fire all callbacks registered to an action hook.
+ * Extra arguments are forwarded to every callback.
+ *
+ * @param string $hook_name
+ * @param mixed  ...$args    Context passed to each callback.
  */
-function run_hook($hook_name) {
-    if (isset($GLOBALS['registered_hooks'][$hook_name]) && is_array($GLOBALS['registered_hooks'][$hook_name])) {
-        foreach ($GLOBALS['registered_hooks'][$hook_name] as $callback) {
-            if (is_callable($callback)) {
-                call_user_func($callback);
-            } else {
-                echo $callback . PHP_EOL;
-            }
+function run_hook(string $hook_name, mixed ...$args): void {
+    if (empty($GLOBALS['registered_hooks'][$hook_name])) return;
+    foreach ($GLOBALS['registered_hooks'][$hook_name] as $callback) {
+        if (is_callable($callback)) {
+            call_user_func_array($callback, $args);
+        } else {
+            echo $callback . PHP_EOL;
         }
     }
 }
 
+// ─── Filter Hooks ─────────────────────────────────────────────────────────────
+
 /**
- * DEBUG HELPER: Call this in your footer or a template to see all active hooks.
+ * Register a callback on a filter hook.
+ * Callbacks are sorted by priority (lower runs first) at apply time.
+ *
+ * @param string   $filter_name
+ * @param callable $callback    Must return the (modified) value.
+ * @param int      $priority    Default 10. Lower = earlier.
  */
-function debug_hooks() {
-    $keys = isset($GLOBALS['registered_hooks']) ? array_keys($GLOBALS['registered_hooks']) : [];
-    echo '' . PHP_EOL;
-    echo '<script>console.log("Active Hooks Registry:", ' . json_encode($keys) . ');</script>';
-    echo '' . PHP_EOL;
+function add_filter(string $filter_name, callable $callback, int $priority = 10): void {
+    $GLOBALS['registered_filters'][$filter_name][] = [
+        'callback' => $callback,
+        'priority' => $priority,
+    ];
 }
 
 /**
- * Registers a settings section that can be rendered in admin/modules/settings.php.
+ * Pass a value through all filter callbacks and return the result.
+ * Extra arguments provide read-only context (not modified by filters).
  *
- * Expected shape:
- * [
- *   'title' => 'Section title',
- *   'description' => 'Optional helper text',
- *   'icon' => 'bi bi-gear',
- *   'fields' => [
- *      [
- *          'key' => 'setting_key',
- *          'label' => 'Field Label',
- *          'type' => 'text|email|password|textarea',
- *          'placeholder' => 'Optional placeholder',
- *          'default' => 'Default value',
- *          'help' => 'Optional helper text',
- *          'rows' => 4 // textarea only
- *      ]
- *   ]
- * ]
+ * @param string $filter_name
+ * @param mixed  $value        The value to filter.
+ * @param mixed  ...$args      Read-only context passed to each callback.
+ * @return mixed               The filtered value.
+ */
+function apply_filter(string $filter_name, mixed $value, mixed ...$args): mixed {
+    if (empty($GLOBALS['registered_filters'][$filter_name])) return $value;
+
+    $entries = $GLOBALS['registered_filters'][$filter_name];
+    usort($entries, fn($a, $b) => $a['priority'] <=> $b['priority']);
+
+    foreach ($entries as $entry) {
+        $value = call_user_func_array($entry['callback'], [$value, ...$args]);
+    }
+    return $value;
+}
+
+// ─── Settings Sections ────────────────────────────────────────────────────────
+
+/**
+ * Register an addon settings section for admin/modules/settings.php.
+ *
+ * Shape: ['title'=>'', 'description'=>'', 'icon'=>'bi bi-gear', 'fields'=>[
+ *   ['key'=>'', 'label'=>'', 'type'=>'text|email|password|textarea|select',
+ *    'placeholder'=>'', 'default'=>'', 'help'=>'', 'rows'=>4]
+ * ]]
  */
 function register_settings_section(string $id, array $section): void {
     if (!isset($section['fields']) || !is_array($section['fields'])) {
         $section['fields'] = [];
     }
-
     $GLOBALS['registered_settings_sections'][$id] = $section;
 }
 
-/**
- * Returns all dynamically-registered settings sections.
- */
+/** Returns all dynamically-registered settings sections. */
 function get_registered_settings_sections(): array {
     return $GLOBALS['registered_settings_sections'] ?? [];
+}
+
+// ─── Debug ────────────────────────────────────────────────────────────────────
+
+/** Dumps active hook and filter names to the browser console. */
+function debug_hooks(): void {
+    $hooks   = array_keys($GLOBALS['registered_hooks']   ?? []);
+    $filters = array_keys($GLOBALS['registered_filters'] ?? []);
+    echo '<script>console.log("Action hooks:", ' . json_encode($hooks)   . ');'
+       . 'console.log("Filter hooks:", '          . json_encode($filters) . ');</script>' . PHP_EOL;
 }

@@ -1,0 +1,11 @@
+{
+    "id":          "podcast",
+    "name":        "Podcast / Episodes",
+    "version":     "1.0.0",
+    "description": "Episode management, chapter gating integration, and RSS feed.",
+    "entry":       "podcast.php",
+    "hooks": [
+        "wiki_entry_render",
+        "chapter_released"
+    ]
+}

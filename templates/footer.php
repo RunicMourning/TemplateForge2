@@ -10,7 +10,7 @@
 
             <!-- Brand + social links -->
             <div>
-                <a class="footer-brand" href="index.php">
+                <a class="footer-brand" href="/">
                     <i class="bi bi-intersect"></i>
                     <?php echo htmlspecialchars($settings['site_name']); ?>
                 </a>

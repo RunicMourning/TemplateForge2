@@ -48,44 +48,63 @@ function get_site_settings($db) {
  * Analytics Tracker
  */
 function track_visit($db) {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
-    $url = $_SERVER['REQUEST_URI'] ?? '/';
+    $ip      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $agent   = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+    $url     = $_SERVER['REQUEST_URI'] ?? '/';
     $referrer = $_SERVER['HTTP_REFERER'] ?? 'Direct';
-    
+
     $visitor_id = hash('sha256', $ip . $agent);
 
-    $os = "Unknown OS";
-    $os_array = [
+    // Session tracking — 30-minute cookie-based session
+    $session_id  = $_COOKIE['tf_sid'] ?? null;
+    $session_key = 'tf_sess_' . $visitor_id;
+    $now         = time();
+
+    if (!$session_id || !isset($_COOKIE[$session_key]) || ($now - (int)$_COOKIE[$session_key]) > 1800) {
+        // New or expired session
+        $session_id = bin2hex(random_bytes(8));
+        $entry_page = $url;
+        setcookie('tf_sid',      $session_id,  $now + 1800, '/');
+        setcookie($session_key,  (string)$now, $now + 1800, '/');
+        setcookie('tf_entry',    $url,          $now + 1800, '/');
+    } else {
+        // Continuing session
+        $entry_page = $_COOKIE['tf_entry'] ?? $url;
+        setcookie($session_key, (string)$now, $now + 1800, '/'); // refresh expiry
+    }
+
+    $os = 'Unknown OS';
+    foreach ([
         '/windows nt 10/i'      => 'Windows 10/11',
-        '/windows nt 6.1/i'      => 'Windows 7',
+        '/windows nt 6.1/i'     => 'Windows 7',
         '/macintosh|mac os x/i' => 'Mac OS',
         '/linux/i'              => 'Linux',
         '/iphone|ipad/i'        => 'iOS',
-        '/android/i'            => 'Android'
-    ];
-    foreach ($os_array as $regex => $value) { 
-        if (preg_match($regex, $agent)) $os = $value; 
+        '/android/i'            => 'Android',
+    ] as $regex => $value) {
+        if (preg_match($regex, $agent)) { $os = $value; break; }
     }
 
-    $browser = "Unknown Browser";
-    $browser_array = [
-        '/msie/i'      => 'Internet Explorer',
-        '/firefox/i'   => 'Firefox',
-        '/safari/i'    => 'Safari',
-        '/chrome/i'    => 'Chrome',
-        '/edge/i'      => 'Edge',
-        '/opera/i'     => 'Opera'
-    ];
-    foreach ($browser_array as $regex => $value) { 
-        if (preg_match($regex, $agent)) $browser = $value; 
+    $browser = 'Unknown Browser';
+    foreach ([
+        '/edg/i'     => 'Edge',
+        '/chrome/i'  => 'Chrome',
+        '/firefox/i' => 'Firefox',
+        '/safari/i'  => 'Safari',
+        '/opera/i'   => 'Opera',
+        '/msie/i'    => 'Internet Explorer',
+    ] as $regex => $value) {
+        if (preg_match($regex, $agent)) { $browser = $value; break; }
     }
 
-    $device = (preg_match('/mobile|android|iphone|ipad/i', $agent)) ? 'Mobile' : 'Desktop';
+    $device = preg_match('/mobile|android|iphone|ipad/i', $agent) ? 'Mobile' : 'Desktop';
 
     try {
-        $stmt = $db->prepare("INSERT INTO analytics (visitor_id, page_url, referrer, browser, os, device) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$visitor_id, $url, $referrer, $browser, $os, $device]);
+        $stmt = $db->prepare(
+            "INSERT INTO analytics (visitor_id, session_id, page_url, entry_page, referrer, browser, os, device)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->execute([$visitor_id, $session_id, $url, $entry_page, $referrer, $browser, $os, $device]);
     } catch (Exception $e) { }
 }
 
@@ -187,7 +206,7 @@ function tf_social_platforms(): array {
         'twitch'    => ['label' => 'Twitch',         'icon' => 'bi-twitch',           'url_prefix' => 'https://twitch.tv/'],
         'reddit'    => ['label' => 'Reddit',         'icon' => 'bi-reddit',           'url_prefix' => 'https://reddit.com/u/'],
         'mastodon'  => ['label' => 'Mastodon',       'icon' => 'bi-mastodon',         'url_prefix' => ''],
-        'bluesky'   => ['label' => 'Bluesky',        'icon' => 'bi-cloud',            'url_prefix' => 'https://bsky.app/profile/'],
+        'bluesky'   => ['label' => 'Bluesky',        'icon' => 'bi-bluesky',          'url_prefix' => 'https://bsky.app/profile/'],
         'pinterest' => ['label' => 'Pinterest',      'icon' => 'bi-pinterest',        'url_prefix' => 'https://pinterest.com/'],
         'spotify'   => ['label' => 'Spotify',        'icon' => 'bi-spotify',          'url_prefix' => ''],
         'patreon'   => ['label' => 'Patreon',        'icon' => 'bi-heart-fill',       'url_prefix' => 'https://patreon.com/'],

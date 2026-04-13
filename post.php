@@ -6,14 +6,13 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/includes/hooks.php';
+require_once __DIR__ . '/includes/module-loader.php';
 require_once __DIR__ . '/includes/css-registry.php';
 
-// Initialize Global Hook Storage
-if (!isset($GLOBALS['registered_hooks'])) {
-    $GLOBALS['registered_hooks'] = [];
-}
+$GLOBALS['registered_hooks']   = [];
+$GLOBALS['registered_filters'] = [];
 
-// Auto-load Addons
+// Legacy addons
 $addons_path = __DIR__ . '/addons';
 if (is_dir($addons_path)) {
     foreach (glob($addons_path . "/*.php") as $file) {
@@ -21,51 +20,35 @@ if (is_dir($addons_path)) {
     }
 }
 
-// Database Connection
+// Database + modules
 $db = new PDO('sqlite:' . __DIR__ . '/db/cms.db');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$settings = get_site_settings($db);
+load_modules($db, __DIR__ . '/modules');
 
-// Get slug from URL
+// Routing
 $slug = $_GET['slug'] ?? '';
-
-// Fetch the post
 $stmt = $db->prepare("SELECT * FROM posts WHERE slug = ? AND status = 'published'");
 $stmt->execute([$slug]);
 $post = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Fetch settings for the header
-$settings = $db->query("SELECT * FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
-
 if (!$post) {
     header("HTTP/1.0 404 Not Found");
     $page = ['title' => 'Post Not Found'];
-    
-    // Pre-render 404 Content
     ob_start();
     if (file_exists('templates/page-404.php')) {
         include 'templates/page-404.php';
     } else {
-        echo "<div class='container py-5'><h1>404</h1><p>The post you are looking for does not exist.</p></div>";
+        echo "<div class='container'><h1>404</h1><p>Post not found.</p></div>";
     }
     $page_content = ob_get_clean();
-
 } else {
-    // Post exists: Prepare data
     $page = ['title' => $post['title']];
-
-    // --- START CAPTURING POST CONTENT ---
-    // This allows the template to set sidebars/CSS via functions before header.php runs
     ob_start();
     include 'templates/post-single.php';
     $page_content = ob_get_clean();
-    // --- END CAPTURING POST CONTENT ---
 }
 
-// 1. Load Header (Now has access to anything set inside the ob_start block)
 include 'templates/header.php';
-
-// 2. Output the captured content
 echo $page_content;
-
-// 3. Load Footer
 include 'templates/footer.php';

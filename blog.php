@@ -1,19 +1,18 @@
 <?php
-// 1. Diagnostics & Dependencies
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-define('IS_INSTALLER', true);
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/includes/hooks.php';
-$GLOBALS['registered_hooks'] = [];
-
-// Load CSS Registry early so queue_css() is available to addons
+require_once __DIR__ . '/includes/module-loader.php';
 require_once __DIR__ . '/includes/css-registry.php';
 
-// Auto-load Addons
+$GLOBALS['registered_hooks']   = [];
+$GLOBALS['registered_filters'] = [];
+
+// Legacy addons
 $addons_path = __DIR__ . '/addons';
 if (is_dir($addons_path)) {
     foreach (glob($addons_path . "/*.php") as $file) {
@@ -21,45 +20,34 @@ if (is_dir($addons_path)) {
     }
 }
 
-$db = new PDO('sqlite:db/cms.db');
+$db = new PDO('sqlite:' . __DIR__ . '/db/cms.db');
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$settings = get_site_settings($db);
+load_modules($db, __DIR__ . '/modules');
 
-// --- 1. ROUTING & FILTERING LOGIC ---
+// Routing & filtering
 $category = $_GET['category'] ?? null;
-$author   = $_GET['author'] ?? null;
+$author   = $_GET['author']   ?? null;
 
 if ($category) {
-    // Filter by Category
     $stmt = $db->prepare("SELECT * FROM posts WHERE category = ? AND status = 'published' ORDER BY created_at DESC");
     $stmt->execute([$category]);
     $posts = $stmt->fetchAll();
-    $page = ['title' => 'Category: ' . htmlspecialchars($category)];
+    $page  = ['title' => 'Category: ' . htmlspecialchars($category)];
 } elseif ($author) {
-    // Filter by Author
     $stmt = $db->prepare("SELECT * FROM posts WHERE author = ? AND status = 'published' ORDER BY created_at DESC");
     $stmt->execute([$author]);
     $posts = $stmt->fetchAll();
-    $page = ['title' => 'Posts by ' . htmlspecialchars($author)];
+    $page  = ['title' => 'Posts by ' . htmlspecialchars($author)];
 } else {
-    // Standard Blog View
     $posts = $db->query("SELECT * FROM posts WHERE status = 'published' ORDER BY created_at DESC")->fetchAll();
-    $page = ['title' => 'Blog'];
+    $page  = ['title' => 'Blog'];
 }
 
-// Fetch site settings
-$settings = $db->query("SELECT * FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
-
-// 2. --- START CAPTURING PAGE CONTENT ---
-// We run the template first so it can set the $custom_sidebar_content variable
-ob_start(); 
+ob_start();
 include 'templates/blog.php';
-$page_content = ob_get_clean(); 
-// --- END CAPTURING PAGE CONTENT ---
+$page_content = ob_get_clean();
 
-// 3. Load Header (Sees the captured sidebar and dynamic page title)
 include 'templates/header.php';
-
-// 4. Output the filtered content
 echo $page_content;
-
-// 5. Load Footer
 include 'templates/footer.php';

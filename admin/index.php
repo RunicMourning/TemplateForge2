@@ -1,11 +1,16 @@
 <?php
+session_set_cookie_params(['path' => '/', 'samesite' => 'Lax']);
 session_start();
 require_once '../functions.php';
 require_once '../includes/hooks.php';
-$GLOBALS['registered_hooks'] = [];
-$db = new PDO('sqlite:../db/cms.db'); // Path must be correct relative to index.php
-$settings = get_site_settings($db); // Now $settings is available everywhere!
+require_once '../includes/module-loader.php';
+$GLOBALS['registered_hooks']   = [];
+$GLOBALS['registered_filters'] = [];
+$db = new PDO('sqlite:../db/cms.db');
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$settings = get_site_settings($db);
 
+// Legacy addons (flat PHP files in /addons/)
 $addons_path = __DIR__ . '/../addons';
 if (is_dir($addons_path)) {
     foreach (glob($addons_path . '/*.php') as $file) {
@@ -13,34 +18,60 @@ if (is_dir($addons_path)) {
     }
 }
 
+// Load registered modules
+load_modules($db, __DIR__ . '/../modules');
+
 // 1. Simple Login Check (Logic only)
 if (!isset($_SESSION['user_id'])) {
+    $error = '';
     if (isset($_POST['login'])) {
         if (!verify_csrf_token($_POST['csrf_token'] ?? null, 'admin_login')) {
-            http_response_code(403);
-            $error = 'Invalid request token. Please refresh and try again.';
+            session_regenerate_id(true);
+            unset($_SESSION['_csrf_tokens']['admin_login']);
+            $error = 'Your session expired. Please try again.';
             include 'views/login.php';
             exit;
         }
         $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
         $stmt->execute([$_POST['user']]);
         $user = $stmt->fetch();
-        
+
         if ($user && password_verify($_POST['pass'], $user['password'])) {
             session_regenerate_id(true);
-            $_SESSION['user_id'] = $user['id'];
-            // ADD THIS LINE:
-            $_SESSION['username'] = $user['username']; 
-            
-            // LOG THE LOGIN
+            $_SESSION['user_id']       = $user['id'];
+            $_SESSION['username']      = $user['username'];
+            $_SESSION['user_password_hash'] = $user['password']; // bind session to credential state
             log_activity($db, 'AUTH', 'Admin Login', "User: " . $user['username']);
-            
             header("Location: index.php"); exit;
         }
-        $error = "Invalid credentials";
+        $error = "Invalid credentials.";
     }
-    // Show login form if not logged in
-    include 'views/login.php'; 
+    include 'views/login.php';
+    exit;
+}
+
+// 1b. Validate session against current DB state — prevents stale sessions surviving
+//     DB resets, password changes, or user ID reuse after deletion.
+$_session_user = null;
+try {
+    $stmt = $db->prepare("SELECT id, username, password FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $_session_user = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (Exception) {}
+
+$_session_invalid =
+    !$_session_user ||
+    $_session_user['username'] !== ($_SESSION['username'] ?? '') ||
+    (isset($_SESSION['user_password_hash']) && !hash_equals($_session_user['password'], $_SESSION['user_password_hash']));
+
+if ($_session_invalid) {
+    // Wipe the stale session entirely and force re-login
+    session_unset();
+    session_destroy();
+    session_start();
+    session_regenerate_id(true);
+    $error = 'Your session has expired or is no longer valid. Please log in again.';
+    include 'views/login.php';
     exit;
 }
 
@@ -50,9 +81,11 @@ $allowed_views = [
     'dashboard',
     'pages',
     'blog',
+    'wiki',
+    'podcast',
     'settings',
-    'navigation', // redirects to settings/navigation
-    'users',      // redirects to settings/users
+    'navigation',
+    'users',
     'logs',
     'analytics'
 ];

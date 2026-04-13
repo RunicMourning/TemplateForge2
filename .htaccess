@@ -1,0 +1,69 @@
+# ----------------------------------------------------------------------
+# SECURITY: PROTECT SYSTEM FILES
+# ----------------------------------------------------------------------
+# 1. Prevent access to the SQLite database file
+<Files "cms.db">
+    Order allow,deny
+    Deny from all
+</Files>
+# 2. Prevent access to any .db, .log, or .ini files
+<FilesMatch "\.(db|log|ini)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+# 3. Prevent directory listing
+Options -Indexes +FollowSymLinks
+# ----------------------------------------------------------------------
+# REWRITE ENGINE
+# ----------------------------------------------------------------------
+RewriteEngine On
+RewriteBase /
+# ----------------------------------------------------------------------
+# SECURITY: LOCK INSTALLER ROUTE AFTER DEPLOYMENT
+# ----------------------------------------------------------------------
+# If admin/lock exists (created by installer), block public access to Install.php.
+# This gives a web-server-level deny in addition to the runtime installer lock.
+RewriteCond %{REQUEST_URI} ^/Install\.php$ [NC]
+RewriteCond %{DOCUMENT_ROOT}/admin/lock -f
+RewriteRule ^ - [F,L]
+# Custom 404 Handler
+ErrorDocument 404 /404.html
+# ----------------------------------------------------------------------
+# WIKI / LORE BIBLE PERMALINKS
+# ----------------------------------------------------------------------
+# Two rules handle wiki URLs:
+#   1. Single segment  /lore          → master index
+#   2. Two segments    /lore/caen     → entry or type index
+# PHP checks the first segment against the wiki_slug_prefix setting.
+# Changing the prefix in admin requires no .htaccess edit.
+# Both rules exclude real files/directories, the admin path,
+# and known PHP entry points (blog.php, post.php, etc.).
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/admin [NC]
+RewriteCond %{REQUEST_URI} !\.(php|html|css|js|png|jpg|gif|webp|svg|ico|txt|xml|zip)$ [NC]
+RewriteRule ^([a-z0-9-]+)/?$ index.php?wiki_prefix=$1&wiki_slug= [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/admin [NC]
+RewriteRule ^([a-z0-9-]+)/([a-z0-9-]+)/?$ index.php?wiki_prefix=$1&wiki_slug=$2 [L,QSA]
+# 1. SPECIFIC FILTERS
+# Handle Categories: category-General.html -> blog.php?category=General
+RewriteRule ^category-([^/]+)\.html$ blog.php?category=$1 [L,QSA]
+# Handle Authors: author-Admin.html -> blog.php?author=Admin
+RewriteRule ^author-([^/]+)\.html$ blog.php?author=$1 [L,QSA]
+# 2. BLOG POSTS
+# Handle Blog Posts (blog-pageslug.html -> post.php?slug=pageslug)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^blog-(.*)\.html$ post.php?slug=$1 [L,QSA]
+# blog.html is the blog index — must sit before the broad .html rule below
+RewriteRule ^blog\.html$ blog.php [L,QSA]
+# 3. BROAD REGULAR PAGES
+# Handle Regular Pages (pageslug.html -> index.php?pageslug=slug)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)\.html$ index.php?pageslug=$1 [L,QSA]
+# Optional: Redirect index.html to home
+RewriteRule ^index\.html$ / [R=301,L]

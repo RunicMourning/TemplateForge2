@@ -1,0 +1,275 @@
+/*!
+ * @tf-label:   Steampunk
+ * @tf-variant:  Light
+ * @tf-group:    Steampunk
+ * @tf-colors:   #f2e8d5,#b5851a,#c27a3a,#2e1f0f
+ * @tf-layout:   Sidebar Right
+ * @tf-source:   TemplatForge
+ */
+
+/*
+ * TemplatForge Theme: Steampunk Light
+ *   BG: #f2e8d5 (aged parchment)  Accent: #b5851a (brass)
+ *   Accent-2: #c27a3a (copper)    Text: #2e1f0f (dark sepia)
+ * Layout: Sidebar right, wide reading column
+ * Fonts: Cinzel (display) + Crimson Text (body)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+
+/* ─── Design Tokens ─────────────────────────────────────────────── */
+:root {
+    --tf-bg:          #f2e8d5;
+    --tf-surface:     #faf4e8;
+    --tf-surface-2:   #e8dcc4;
+    --tf-border:      #c8b48a;
+    --tf-text:        #2e1f0f;
+    --tf-text-muted:  #7a5c38;
+    --tf-accent:      #b5851a;
+    --tf-accent-2:    #c27a3a;
+    --tf-accent-dark: #8f6612;
+    --tf-nav-bg:      #2e1f0f;
+    --tf-nav-border:  #1a0f05;
+    --tf-font-display: 'Cinzel', 'Palatino Linotype', serif;
+    --tf-font-body:    'Crimson Text', Georgia, serif;
+    --tf-radius:       2px;
+    --tf-radius-lg:    3px;
+    --tf-shadow:       0 4px 24px rgba(46,31,15,0.12);
+    --tf-shadow-sm:    0 2px 8px rgba(46,31,15,0.08);
+}
+
+/* ─── Layout: Sidebar Right ─────────────────────────────────────── */
+
+.container { max-width: 1400px; }
+
+@media (min-width: 1024px) {
+    .site-layout {
+        grid-template-columns: 1fr 340px;
+        gap: 3rem;
+    }
+    .site-main  { order: 1; }
+    .site-aside { order: 2; }
+}
+
+/* ─── Typography ─────────────────────────────────────────────────── */
+
+body {
+    background-color: #f2e8d5;
+    background-color: var(--tf-bg);
+    color: var(--tf-text);
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.02em;
+}
+
+/* ─── Texture overlay via pseudo-element on body ─────────────────── */
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(180,140,80,0.03) 2px,
+            rgba(180,140,80,0.03) 4px
+        );
+}
+
+/* ─── Ornamental section label ───────────────────────────────────── */
+
+.section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--tf-accent);
+    border-top: 1px solid var(--tf-border);
+    border-bottom: 1px solid var(--tf-border);
+    padding: 0.45rem 0;
+    margin-bottom: 1.75rem;
+    position: relative;
+}
+.section-label::after { display: none; }
+.section-label::before {
+    content: '⚙';
+    margin-right: 0.5rem;
+    opacity: 0.5;
+    font-size: 0.8rem;
+}
+
+/* ─── Hero ───────────────────────────────────────────────────────── */
+
+.hero {
+    border: 1px solid var(--tf-border);
+    border-top: 4px solid var(--tf-accent);
+    padding: 2.5rem 2rem;
+    margin-bottom: 2.5rem;
+    background: var(--tf-surface);
+    position: relative;
+}
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 2rem;
+    right: 2rem;
+    height: 1px;
+    background: var(--tf-border);
+}
+.hero-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--tf-accent);
+    margin-bottom: 1rem;
+}
+.hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.8rem, 4.5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--tf-text);
+}
+.hero-lead {
+    font-size: 1.1rem;
+    color: var(--tf-text-muted);
+    font-style: italic;
+}
+
+/* ─── Cards ──────────────────────────────────────────────────────── */
+
+.post-card {
+    border-radius: 0;
+    border: 1px solid var(--tf-border);
+    background: var(--tf-surface);
+    box-shadow: none;
+}
+.post-card:hover {
+    transform: none;
+    border-color: var(--tf-accent);
+    box-shadow: 2px 2px 0 var(--tf-accent);
+}
+.post-card-accent {
+    background: linear-gradient(to bottom, var(--tf-accent), var(--tf-accent-2));
+}
+
+.feature-card {
+    border-radius: 0;
+    border: 1px solid var(--tf-border);
+    border-top: 3px solid var(--tf-accent);
+    background: var(--tf-surface);
+}
+.feature-card .card-accent { display: none; }
+.feature-card-icon {
+    color: var(--tf-accent);
+    background: rgba(181,133,26,0.08);
+    border-color: var(--tf-border);
+    border-radius: 0;
+}
+
+/* ─── Sidebar widget ─────────────────────────────────────────────── */
+
+.widget-card {
+    border-radius: 0;
+    border: 1px solid var(--tf-border);
+    border-top: 3px double var(--tf-accent);
+    background: var(--tf-surface);
+    box-shadow: none;
+}
+.widget-card .card-accent { display: none; }
+.widget-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--tf-accent);
+    border-bottom: 1px solid var(--tf-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+.widget-title::after { display: none; }
+
+/* ─── Nav ────────────────────────────────────────────────────────── */
+
+.nav-brand {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: 1.1rem;
+}
+
+/* ─── Blockquote ─────────────────────────────────────────────────── */
+
+blockquote {
+    border-left: 4px double var(--tf-accent);
+    background: rgba(181,133,26,0.05);
+    color: var(--tf-text-muted);
+    font-style: italic;
+    padding: 1.25rem 1.5rem;
+    border-radius: 0;
+    position: relative;
+}
+blockquote::before {
+    content: '\275D';
+    font-size: 2rem;
+    color: var(--tf-accent);
+    opacity: 0.3;
+    position: absolute;
+    top: 0.25rem;
+    left: 0.5rem;
+    line-height: 1;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────── */
+
+.btn {
+    border-radius: 0;
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-width: 2px;
+}
+.btn-primary {
+    background: var(--tf-accent);
+    border-color: var(--tf-accent);
+    color: #fff;
+}
+.btn-primary:hover {
+    background: var(--tf-accent-dark);
+    border-color: var(--tf-accent-dark);
+    color: #fff;
+}
+.btn-secondary {
+    color: var(--tf-accent);
+    border-color: var(--tf-accent);
+}
+.btn-secondary:hover {
+    background: var(--tf-accent);
+    color: #fff;
+}
+
+/* ─── Forms ──────────────────────────────────────────────────────── */
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="search"], input[type="url"], input[type="number"],
+textarea, select {
+    border-radius: 0;
+    border-color: var(--tf-border);
+    background: var(--tf-surface);
+    color: var(--tf-text);
+}
+input:focus, textarea:focus, select:focus {
+    border-color: var(--tf-accent);
+    box-shadow: 0 0 0 3px rgba(181,133,26,0.15);
+}

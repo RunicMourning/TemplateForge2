@@ -75,7 +75,13 @@ set_page_sidebar($blog_sidebar);
         </div>
         <div class="p-4" style="padding-top: 1.5rem !important;">
             <div class="post-content">
-                <?php echo $post['content']; ?>
+                <?php
+                $post_body = $post['content'];
+                if (function_exists('apply_filter')) {
+                    $post_body = apply_filter('wiki_entry_render', $post_body, []);
+                }
+                echo $post_body;
+                ?>
             </div>
         </div>
     </div>

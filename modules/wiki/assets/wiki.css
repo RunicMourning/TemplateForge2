@@ -1,0 +1,188 @@
+/*
+ * Wiki / Lore Bible — Frontend Styles
+ * Inherits all CSS variables from the active site theme.
+ * No colours hardcoded — everything references theme tokens.
+ */
+
+/* ─── Type grid (master index) ───────────────────────────────────────────── */
+
+.wiki-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.wiki-type-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1.25rem;
+    border: 1px solid var(--tf-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--tf-text);
+    background: var(--tf-surface);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.wiki-type-card:hover {
+    border-color: var(--tf-accent);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    text-decoration: none;
+}
+
+.wiki-type-icon {
+    font-size: 1.75rem;
+    opacity: 0.55;
+    margin-bottom: 0.35rem;
+}
+
+.wiki-type-name  { font-size: 1rem;   font-weight: 700; }
+.wiki-type-count { font-size: 0.78rem; opacity: 0.55; }
+.wiki-type-desc  { font-size: 0.8rem;  opacity: 0.65; margin-top: 0.2rem; }
+
+/* ─── Entry list (type index) ────────────────────────────────────────────── */
+
+.wiki-entry-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.wiki-list-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--tf-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--tf-text);
+    background: var(--tf-surface);
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.wiki-list-item:hover { border-color: var(--tf-accent); text-decoration: none; }
+
+.wiki-list-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--tf-border);
+}
+
+.wiki-list-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.wiki-list-thumb--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--tf-surface-2);
+    font-size: 1.4rem;
+    opacity: 0.4;
+}
+
+.wiki-list-body  { flex: 1; min-width: 0; }
+.wiki-list-title { font-weight: 600; font-size: 0.95rem; }
+.wiki-list-excerpt { font-size: 0.8rem; opacity: 0.65; margin-top: 0.2rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ─── Single entry ───────────────────────────────────────────────────────── */
+
+.wiki-cover {
+    width: 100%;
+    height: 280px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.wiki-cover-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.45));
+}
+
+.wiki-entry-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.wiki-entry-layout--has-portrait { flex-direction: row; }
+
+.wiki-portrait-col { flex-shrink: 0; width: 180px; }
+
+.wiki-portrait {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--tf-border);
+    display: block;
+}
+
+.wiki-entry-main { flex: 1; min-width: 0; }
+
+.wiki-entry-title {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1.25rem;
+}
+
+.wiki-entry-body h2 { font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+.wiki-entry-body h3 { font-size: 1.05rem; font-weight: 700; margin: 1.25rem 0 0.4rem; }
+.wiki-entry-body p  { line-height: 1.7; margin-bottom: 1rem; }
+.wiki-entry-body hr { border: none; border-top: 1px solid var(--tf-border); margin: 1.5rem 0; }
+
+.wiki-map { margin: 1.5rem 0; }
+.wiki-map img { width: 100%; border-radius: 8px; border: 1px solid var(--tf-border); }
+
+.wiki-inline-images { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1.25rem 0; }
+.wiki-inline-images figure { margin: 0; }
+.wiki-inline-images img { max-width: 280px; border-radius: 6px; border: 1px solid var(--tf-border); }
+
+/* ─── Related entries ────────────────────────────────────────────────────── */
+
+.wiki-related { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--tf-border); }
+.wiki-related-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.5; font-weight: 700; margin-bottom: 0.75rem; }
+
+.wiki-related-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.wiki-related-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--tf-border);
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--tf-text);
+    background: var(--tf-surface);
+    transition: border-color 0.15s;
+}
+
+.wiki-related-card:hover { border-color: var(--tf-accent); text-decoration: none; }
+.wiki-related-type { opacity: 0.5; font-size: 0.8rem; }
+
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+    .wiki-type-grid { grid-template-columns: repeat(2, 1fr); }
+    .wiki-entry-layout--has-portrait { flex-direction: column; }
+    .wiki-portrait-col { width: 100%; max-width: 200px; }
+    .wiki-cover { height: 180px; }
+    .wiki-entry-title { font-size: 1.5rem; }
+}
+
+/* ─── Inline wiki links (resolved [[Title]] tokens) ─────────────────────── */
+
+.wiki-inline-link {
+    color: var(--tf-accent);
+    border-bottom: 1px dotted var(--tf-accent);
+    text-decoration: none;
+}
+
+.wiki-inline-link:hover {
+    border-bottom-style: solid;
+    text-decoration: none;
+}

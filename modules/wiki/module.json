@@ -1,0 +1,11 @@
+{
+    "id":          "wiki",
+    "name":        "Wiki / Lore Bible",
+    "version":     "1.0.0",
+    "description": "Lore entries with chapter-gated visibility, image attachments, and cross-linking.",
+    "entry":       "wiki.php",
+    "hooks": [
+        "wiki_entry_render",
+        "chapter_released"
+    ]
+}

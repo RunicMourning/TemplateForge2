@@ -88,13 +88,13 @@ pre {
 
 .container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 1.25rem;
+    padding: 0 1.5rem;
 }
 
-.container-narrow { max-width: 780px; }
-.container-wide   { max-width: 1400px; }
+.container-narrow { max-width: 860px; }
+.container-wide   { max-width: 1600px; }
 
 .site-layout {
     display: grid;
@@ -105,11 +105,11 @@ pre {
 
 @media (min-width: 1024px) {
     .site-layout {
-        grid-template-columns: 1fr 280px;
+        grid-template-columns: 1fr 340px;
         gap: 3rem;
     }
     .site-layout.sidebar-left {
-        grid-template-columns: 280px 1fr;
+        grid-template-columns: 340px 1fr;
     }
 }
 

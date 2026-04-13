@@ -48,12 +48,12 @@ textarea, select {
 
 /* ─── Layout: Sidebar LEFT ─────────────────────────────────────── */
 
-.container { max-width: 1000px; }
+.container { max-width: 1400px; }
 
 @media (min-width: 1024px) {
     .site-layout {
         display: grid;
-        grid-template-columns: 280px 1fr;
+        grid-template-columns: 340px 1fr;
         gap: 3rem;
         align-items: start;
     }

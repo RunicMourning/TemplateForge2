@@ -47,8 +47,8 @@ textarea, select {
 
 /* ─── Layout: Full-width, no sidebar ──────────────────────────── */
 
-.container { max-width: 860px; }
-.container-wide { max-width: 860px; }
+.container { max-width: 1600px; }
+.container-wide { max-width: 1600px; }
 .site-aside { display: none !important; }
 .site-layout { grid-template-columns: 1fr !important; gap: 2rem; padding: 3rem 0; }
 .site-main { order: 1; max-width: 100%; }

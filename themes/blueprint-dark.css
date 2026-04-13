@@ -47,7 +47,7 @@ textarea, select {
 
 /* ─── Layout: App-shell ────────────────────────────────────────── */
 
-.container { max-width: 1300px; }
+.container { max-width: 1400px; }
 
 .site-layout {
     background: var(--tf-surface);
@@ -61,7 +61,7 @@ textarea, select {
 @media (min-width: 1024px) {
     .site-layout {
         display: grid;
-        grid-template-columns: 240px 1fr;
+        grid-template-columns: 340px 1fr;
         min-height: calc(100vh - 12rem);
     }
     .site-main {

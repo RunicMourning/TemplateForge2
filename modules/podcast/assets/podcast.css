@@ -1,0 +1,144 @@
+/*
+ * Podcast Module — Frontend Styles
+ * Uses --tf-* theme variables throughout.
+ */
+
+/* ─── Episode archive ────────────────────────────────────────────────────── */
+
+.pod-episode-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.pod-episode-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--tf-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--tf-text);
+    background: var(--tf-surface);
+    transition: border-color 0.15s;
+}
+
+.pod-episode-row:hover { border-color: var(--tf-accent); text-decoration: none; }
+
+.pod-ep-number {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--tf-accent);
+    white-space: nowrap;
+    min-width: 48px;
+}
+
+.pod-ep-body  { flex: 1; min-width: 0; }
+.pod-ep-title { font-weight: 600; font-size: 0.95rem; }
+.pod-ep-desc  { font-size: 0.8rem; opacity: 0.6; margin-top: 0.15rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pod-ep-date  { font-size: 0.75rem; opacity: 0.45; margin-top: 0.2rem; }
+
+/* ─── Single episode ─────────────────────────────────────────────────────── */
+
+.pod-episode-header { margin-bottom: 1.75rem; }
+
+.pod-ep-number-lg {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--tf-accent);
+    margin-bottom: 0.4rem;
+}
+
+.pod-ep-title-lg {
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.4rem;
+}
+
+.pod-ep-meta        { font-size: 0.8rem; opacity: 0.5; }
+.pod-ep-description { margin-top: 0.75rem; opacity: 0.75; line-height: 1.6; }
+
+/* ─── Player ─────────────────────────────────────────────────────────────── */
+
+.pod-player {
+    background: var(--tf-surface);
+    border: 1px solid var(--tf-border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+/* ─── Section headings ───────────────────────────────────────────────────── */
+
+.pod-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    opacity: 0.45;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* ─── Wiki reveals grid ──────────────────────────────────────────────────── */
+
+.pod-wiki-reveals { margin-bottom: 2rem; }
+
+.pod-wiki-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.pod-wiki-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--tf-border);
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--tf-text);
+    background: var(--tf-surface);
+    transition: border-color 0.15s;
+}
+
+.pod-wiki-card:hover { border-color: var(--tf-accent); text-decoration: none; }
+
+/* ─── Show notes ─────────────────────────────────────────────────────────── */
+
+.pod-show-notes { border-top: 1px solid var(--tf-border); padding-top: 1.5rem; }
+
+.pod-show-notes-body h2 { font-size: 1.2rem; margin: 1.25rem 0 0.5rem; }
+.pod-show-notes-body h3 { font-size: 1rem; margin: 1rem 0 0.4rem; }
+.pod-show-notes-body p  { line-height: 1.7; margin-bottom: 0.9rem; }
+.pod-show-notes-body ul,
+.pod-show-notes-body ol { padding-left: 1.5rem; margin-bottom: 0.9rem; }
+.pod-show-notes-body li { line-height: 1.7; }
+
+/* ─── Wiki "First appears" badge ─────────────────────────────────────────── */
+
+.wiki-first-appears {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 1.5rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--tf-border);
+    border-radius: 100px;
+}
+
+.wiki-first-appears a { color: inherit; }
+.wiki-first-appears a:hover { color: var(--tf-accent); }
+
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+    .pod-ep-title-lg { font-size: 1.4rem; }
+    .pod-ep-number { display: none; }
+}
